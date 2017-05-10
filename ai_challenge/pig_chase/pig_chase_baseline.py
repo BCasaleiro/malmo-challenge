@@ -26,6 +26,7 @@ from threading import Thread, active_count
 from time import sleep
 
 from malmopy.agent import RandomAgent
+
 try:
     from malmopy.visualization.tensorboard import TensorboardVisualizer
     from malmopy.visualization.tensorboard.cntk import CntkConverter
@@ -34,7 +35,7 @@ except ImportError:
     from malmopy.visualization import ConsoleVisualizer
 
 from common import parse_clients_args, visualize_training, ENV_AGENT_NAMES, ENV_TARGET_NAMES
-from agent import PigChaseChallengeAgent, FocusedAgent
+from agent import PigChaseChallengeAgent, FocusedAgent, RunAwayAgent
 from environment import PigChaseEnvironment, PigChaseSymbolicStateBuilder
 
 # Enforce path
@@ -88,6 +89,8 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
+        elif baseline_agent == 'runaway':
+            agent = RunAwayAgent(name, ENV_AGENT_NAMES[0],ENV_TARGET_NAMES[0])
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -101,7 +104,6 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
             # check if env needs reset
             if env.done:
-
                 visualize_training(visualizer, step, viz_rewards)
                 viz_rewards = []
                 obs = env.reset()
@@ -142,7 +144,7 @@ def run_experiment(agents_def):
 if __name__ == '__main__':
     arg_parser = ArgumentParser('Pig Chase baseline experiment')
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
-                            choices=['astar', 'random'],
+                            choices=['astar', 'runaway', 'random'],
                             help='The type of baseline to run.')
     arg_parser.add_argument('-e', '--epochs', type=int, default=5,
                             help='Number of epochs to run.')
@@ -164,4 +166,3 @@ if __name__ == '__main__':
               for role, agent in enumerate(ENV_AGENT_NAMES)]
 
     run_experiment(agents)
-
