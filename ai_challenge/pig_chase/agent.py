@@ -87,7 +87,7 @@ class RunAwayAgent(AStarAgent):
     def __init__(self, name, enemy, target, visualizer = None):
         super(RunAwayAgent, self).__init__(name, len(RunAwayAgent.ACTIONS),visualizer = visualizer)
         self._previous_enemy_pos = None
-        self._prevous_enemy_def = None
+        self._previous_enemy_def = None
         self._target = str(target)
         self._previous_pig_pos = None
         self._action_list = []
@@ -140,13 +140,9 @@ class RunAwayAgent(AStarAgent):
         # Check if the enemy moved
         if not self._previous_enemy_pos == self.enemy['position']:
             # Enemy moved or is the first round
-            if self._previous_enemy_pos == None:
-                # It's the first round
-                self._previous_enemy_pos = self.enemy['position']
-                self._prevous_enemy_def = self.enemy_def
-            else:
+            if not self._previous_enemy_pos == None:
                 # Enemy moved
-                past_path, past_cost = self._find_shortest_path(self._prevous_enemy_def, self.target_def, state=world)
+                past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self.target_def, state=world)
                 path, cost = self._find_shortest_path(self.enemy_def, self.target_def, state=world)
 
                 if len(path) > len(past_path):
@@ -172,8 +168,8 @@ class RunAwayAgent(AStarAgent):
                     for point in path:
                         self._action_list.append(point.action)
 
-                self._previous_enemy_pos = self.enemy['position']
-                self._prevous_enemy_def = self.enemy_def
+        self._previous_enemy_pos = self.enemy['position']
+        self._previous_enemy_def = self.enemy_def
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
@@ -215,8 +211,10 @@ class RunAwayAgent(AStarAgent):
                                 n.z, n.x] != 'sand']
         return valid_neighbours
 
-    def heuristic(self, a, b, **kwargs):
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
 
 class FocusedAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
