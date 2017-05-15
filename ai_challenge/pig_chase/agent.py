@@ -246,7 +246,8 @@ class RunAwayAgent(AStarAgent):
                             left_hole = (7, 4, 0)
                             path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
                             path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
-
+                            print path_to_right
+                            print path_to_left
                             print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
                             if len(path_to_right) > len(path_to_left):
@@ -272,7 +273,8 @@ class RunAwayAgent(AStarAgent):
                         left_hole = (7, 4, 0)
                         path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
                         path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
-
+                        print path_to_right
+                        print path_to_left
                         print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
                         if len(path_to_right) > len(path_to_left):
