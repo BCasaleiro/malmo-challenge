@@ -37,7 +37,7 @@ from collections import deque
 
 P_FOCUSED = .75
 CELL_WIDTH = 33
-
+DEBUG = 0
 
 class PigChaseQLearnerAgent(QLearnerAgent):
     """A thin wrapper around QLearnerAgent that normalizes rewards to [-1,1]"""
@@ -444,18 +444,22 @@ class QLearnAgent(AStarAgent):
 
         maximum = -25
         max_action = 0
+        if DEBUG: print "[UpdateQ]-Actions:", actions
         for i in range(len(actions)):
-            q_temp = q_next + tuple((self.ACTIONS[i]))
+            q_temp = q_next + tuple((actions[i],))
+            if DEBUG: print "[UpdateQ]-Q.temp:", q_temp
             if q_temp in self.Q.keys():
                 if self.Q[q_temp] > maximum:
                     maximum = self.Q[q_temp]
-                    max_action = self.ACTIONS[i]
-                    print "Here"
+                    max_action = actions[i]
 
-
-        q_next = q_next + tuple((max_action,))
+        if(maximum == -25):
+            q_next = q_next + tuple((random.choice(actions),))
+        else:
+            q_next = q_next + tuple((max_action,))
 
         self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.eps*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
+        if DEBUG: print "[UpdateQ]-Q[x]=", self.Q[q_prev]
 
     def get_key(self, state):
         # Get current world state
@@ -497,17 +501,25 @@ class QLearnAgent(AStarAgent):
 
         maximum = -25
         max_action = 0
+
+        if DEBUG: print len(self.Q.keys())
+        if DEBUG: print "[ACT]-Q:",self.Q
+        if DEBUG: print "[ACT]-Actions:",actions
+
         for i in range(len(actions)):
-            q_temp = q + tuple((self.ACTIONS[i]))
+            q_temp = q + tuple((actions[i],))
+
+            if DEBUG: print "[ACT]-Q.temp", q_temp
+
             if q_temp in self.Q.keys():
                 if self.Q[q_temp] > maximum:
                     maximum = self.Q[q_temp]
-                    max_action = self.ACTIONS[i]
-                    print "Here"
+                    max_action = actions[i]
 
 
         if(maximum == -25):
             return random.choice(actions)
+
         return max_action
 
     def neighbors(self, pos, state=None):

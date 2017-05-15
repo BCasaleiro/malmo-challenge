@@ -1,0 +1,40 @@
+Pillow found, setting as default backend.
+Cannot import tensorboard, using ConsoleVisualizer.
+Im here
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0
+1
+2
+0Caught control-c - shutting down.

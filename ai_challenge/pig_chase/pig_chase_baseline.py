@@ -151,7 +151,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
                             choices=['astar', 'runaway', 'random', 'qlearn'],
                             help='The type of baseline to run.')
-    arg_parser.add_argument('-e', '--epochs', type=int, default=300,
+    arg_parser.add_argument('-e', '--epochs', type=int, default=4000,
                             help='Number of epochs to run.')
     arg_parser.add_argument('clients', nargs='*',
                             default=['127.0.0.1:10000', '127.0.0.1:10001'],
