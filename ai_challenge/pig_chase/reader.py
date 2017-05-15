@@ -2,9 +2,21 @@
 
 f = open('test01.txt','r')
 lines = f.read().split('\n')
-print lines
 
-for i in range(len(lines)):
+val = []
+step = []
+for line in lines:
 	line_split = line.split(' ')
-	number = line_split[len(line_split)-1]
-	print number
+	#print line_split
+	if(line_split[3]=="Training/reward"):
+		#print line_split[3]
+		step.append(line_split[1])
+		val.append(line_split[len(line_split)-1])
+
+for v in val:
+	print v
+
+print "-----"
+
+for s in step:
+	print s

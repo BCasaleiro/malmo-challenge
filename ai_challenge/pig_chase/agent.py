@@ -461,6 +461,10 @@ class QLearnAgent(AStarAgent):
         self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.eps*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
         if DEBUG: print "[UpdateQ]-Q[x]=", self.Q[q_prev]
 
+        np.save('Q.npy', self.Q)
+
+
+
     def get_key(self, state):
         # Get current world state
         world = state[0]
