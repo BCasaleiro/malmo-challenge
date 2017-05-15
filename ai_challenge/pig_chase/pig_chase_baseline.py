@@ -88,6 +88,8 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
+        elif baseline_agent == 'qlearner':
+            agent = FocusedAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.2, 0.9)
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -107,10 +109,18 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                 obs = env.reset()
 
             # select an action
-            action = agent.act(obs, reward, agent_done, is_training=True)
+            if baseline_agent == 'qlearner':
+                action, intention, len_path = agent.act(obs, reward, agent_done, is_training=True)
+                aux_obs = obs
+            else:
+                action = agent.act(obs, reward, agent_done, is_training=True)
+
             # take a step
             obs, reward, agent_done = env.do(action)
             viz_rewards.append(reward)
+
+            if baseline_agent == 'qlearner':
+                agent.updateQ(aux_obs, action, obs, reward, intention, len_path)
 
             agent.inject_summaries(step)
 
@@ -142,7 +152,7 @@ def run_experiment(agents_def):
 if __name__ == '__main__':
     arg_parser = ArgumentParser('Pig Chase baseline experiment')
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
-                            choices=['astar', 'random'],
+                            choices=['astar', 'random', 'qlearner'],
                             help='The type of baseline to run.')
     arg_parser.add_argument('-e', '--epochs', type=int, default=5,
                             help='Number of epochs to run.')
@@ -164,4 +174,3 @@ if __name__ == '__main__':
               for role, agent in enumerate(ENV_AGENT_NAMES)]
 
     run_experiment(agents)
-
