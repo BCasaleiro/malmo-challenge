@@ -112,6 +112,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
             action = agent.act(obs, reward, agent_done, is_training=True)
             # take a step
             obs, reward, agent_done = env.do(action)
+
             viz_rewards.append(reward)
 
             agent.inject_summaries(step)

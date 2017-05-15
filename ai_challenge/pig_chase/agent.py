@@ -413,6 +413,99 @@ class FocusedAgent(AStarAgent):
     def matches(self, a, b):
         return a.x == b.x and a.z == b.z  # don't worry about dir and action
 
+
+class QLearnAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+    Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
+
+    def __init__(self, name, target, visualizer = None):
+        super(QLearnAgent, self).__init__(name, len(QLearnAgent.ACTIONS),
+                                           visualizer = visualizer)
+        self._target = str(target)
+        self._previous_target_pos = None
+        self.Q = dict()
+
+    def updateQ(self, state, action, new_state, reward):
+        # Get current world state
+        world = state[0]
+        entities = state[1]
+
+        self.print_map(world)
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction(int(entitie[u'yaw']))
+            elif entitie[u'name'] == self.enemy['name']:
+                dir_enemy = self.yaw_to_direction(int(entitie[u'yaw']))
+
+        # Get my position
+        agent = \
+            [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+
+        # Get enemy position
+        enemy = \
+            [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
+
+        # Get pig position
+        pig = \
+            [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+
+        key =
+
+    def act(self, state, reward, done, is_training=False):
+        if done:
+            self._action_list = []
+            self._previous_target_pos = None
+
+        if state is None:
+            return np.random.randint(0, self.nb_actions)
+
+
+
+
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in QLearnAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(
+                    QLearnAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(
+                    QLearnAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
+                                           pos.direction, action))
+            if action == "movenorth":
+                neighbors.append(QLearnAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
+            elif action == "moveeast":
+                neighbors.append(QLearnAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
+            elif action == "movesouth":
+                neighbors.append(QLearnAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
+            elif action == "movewest":
+                neighbors.append(QLearnAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
+
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
 class PigChaseHumanAgent(GuiAgent):
     def __init__(self, name, environment, keymap, max_episodes, max_actions,
                  visualizer, quit):
