@@ -47,7 +47,6 @@ class PigChaseQLearnerAgent(QLearnerAgent):
         return super(PigChaseQLearnerAgent, self).act(state, reward, done,
                                                       is_training)
 
-
 class PigChaseChallengeAgent(BaseAgent):
     """Pig Chase challenge agent - behaves focused or random."""
 
