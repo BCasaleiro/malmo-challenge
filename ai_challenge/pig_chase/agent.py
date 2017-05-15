@@ -315,14 +315,14 @@ class RunAwayAgent(AStarAgent):
                 neighbors.append(
                     FocusedAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
                                            pos.direction, action))
-            if action == "movenorth":
-                neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
-            elif action == "moveeast":
-                neighbors.append(FocusedAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
-            elif action == "movesouth":
-                neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
-            elif action == "movewest":
-                neighbors.append(FocusedAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
+            # if action == "movenorth":
+            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
+            # elif action == "moveeast":
+            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
+            # elif action == "movesouth":
+            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
+            # elif action == "movewest":
+            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
 
         # now prune:
         valid_neighbours = [n for n in neighbors if
