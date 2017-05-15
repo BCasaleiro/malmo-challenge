@@ -457,7 +457,7 @@ class QLearnerAgent(AStarAgent):
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
     def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
-        super(FocusedAgent, self).__init__(name, len(FocusedAgent.ACTIONS),visualizer = visualizer)
+        super(QLearnerAgent, self).__init__(name, len(QLearnerAgent.ACTIONS),visualizer = visualizer)
         self.me = { 'name': str(name) }
         self.enemy = { 'name': str(enemy) }
         self.pig = { 'name': str(target) }
@@ -475,12 +475,13 @@ class QLearnerAgent(AStarAgent):
         self.alpha = float(alpha)
         self.eps = float(eps)
 
-    def get_key():
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    def get_key(self, obs):
         # Get current world state
         world = obs[0]
         entities = obs[1]
-
-        self.print_map(world)
 
         # Get my direction and enemy's direction
         for entitie in entities:
@@ -502,7 +503,10 @@ class QLearnerAgent(AStarAgent):
         self.pig_def = QLearnerAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
         self.enemy_def = QLearnerAgent.Neighbour(1, self.enemy['position'][0], self.enemy['position'][1], self.enemy['position'][2], "")
 
-        enemy_action = self.enemy_chasing_pig(world)
+        if self._previous_enemy_pos == None:
+            enemy_action = True
+        else:
+            enemy_action = self.enemy_chasing_pig(world)
 
         return QLearnerAgent.State( (self.me['position'][0], self.me['position'][1]),(self.enemy['position'][0], self.enemy['position'][1]),(self.pig['position'][0], self.pig['position'][1]),enemy_action )
 
@@ -526,6 +530,8 @@ class QLearnerAgent(AStarAgent):
 
         if maximum == -25:
             m = random.choice(A)
+
+        q_next = (aux, m)
 
         if intention == 0:
             rew = ( len_path * (-1) ) + 5
@@ -566,11 +572,11 @@ class QLearnerAgent(AStarAgent):
 
     def enemy_chasing_pig(self, world):
         if self.pig_moved():
-            past_path, past_cost = self.find_shortest_path(self._previous_enemy_def, self._previous_pig_def, state=world)
-            path, cost = self.find_shortest_path(self.enemy_def, self._previous_pig_def, state=world)
+            past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self._previous_pig_def, state=world)
+            path, cost = self._find_shortest_path(self.enemy_def, self._previous_pig_def, state=world)
         else:
-            past_path, past_cost = self.find_shortest_path(self._previous_enemy_def, self.pig_def, state=world)
-            path, cost = self.find_shortest_path(self.enemy_def, self.pig_def, state=world)
+            past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self.pig_def, state=world)
+            path, cost = self._find_shortest_path(self.enemy_def, self.pig_def, state=world)
 
         print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
 
@@ -593,8 +599,14 @@ class QLearnerAgent(AStarAgent):
            self._previous_pig_def = None
            self._previous_enemy_def = None
 
+        # Get current world state
+        world = obs[0]
+        entities = obs[1]
+
+        self.print_map(world)
+
         # 'Xs', 'Xe', 'Xp', 'Ae'
-        s = get_key(obs)
+        s = self.get_key(obs)
 
         # Defect or Cooperate
         A = [0, 1]
@@ -612,8 +624,8 @@ class QLearnerAgent(AStarAgent):
             m = random.choice(A)
 
         if m == 0: # Defect
-            path_to_right, cost_to_right = self.find_shortest_path(self.me_def, self.right_hole, state=world)
-            path_to_left, cost_to_left = self.find_shortest_path(self.me_def, self.left_hole, state=world)
+            path_to_right, cost_to_right = self._find_shortest_path(self.me_def, self.right_hole, state=world)
+            path_to_left, cost_to_left = self._find_shortest_path(self.me_def, self.left_hole, state=world)
             print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
             if len(path_to_right) > len(path_to_left):
@@ -621,8 +633,8 @@ class QLearnerAgent(AStarAgent):
             else:
                 self.get_action_list(path_to_right)
         else: #Cooperate
-            path, cost = self.find_shortest_path(self.me_def, self.pig_def, state=world)
-            self.get_action_list(path_to_right)
+            path, cost = self._find_shortest_path(self.me_def, self.pig_def, state=world)
+            self.get_action_list(path)
 
         self._previous_pig_pos = self.pig['position']
         self._previous_enemy_pos = self.enemy['position']
