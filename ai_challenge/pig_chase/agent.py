@@ -174,7 +174,7 @@ class RunAwayAgent(AStarAgent):
     def enemy_moved(self):
         return not self._previous_enemy_pos == self.enemy['position']
 
-    def enemy_chasing_pig(self):
+    def enemy_chasing_pig(self, world):
         past_path, past_cost = self._find_shortest_path(self._previous_enemy_pos, self.pig['position'], state=world)
         path, cost = self._find_shortest_path(self.enemy['position'], self.pig['position'], state=world)
         print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
@@ -233,7 +233,7 @@ class RunAwayAgent(AStarAgent):
             if not self.pig_moved():
                 print '[DEBUG] Pig did not move'
                 if self.enemy_moved():
-                    if self.enemy_chasing_pig():
+                    if self.enemy_chasing_pig(world):
                         print '[DEBUG] Enemy chasing pig'
                         if not self._chasing_pig:
                             path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
@@ -283,6 +283,8 @@ class RunAwayAgent(AStarAgent):
 
         self._previous_pig_pos = self.pig['position']
         self._previous_enemy_pos = self.enemy['position']
+
+        print ''
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
