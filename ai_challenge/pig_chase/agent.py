@@ -133,7 +133,7 @@ class RunAwayAgent(AStarAgent):
         return 1
 
     def matches(self, a, b):
-        return (a[0] == b[0]) and (a[1] == b[1])
+        return a.x == b.x and a.z == b.z
 
     def find_shortest_path(self, start, end, **kwargs):
         came_from, cost_so_far = {}, {}
@@ -314,14 +314,6 @@ class RunAwayAgent(AStarAgent):
                 neighbors.append(
                     FocusedAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
                                            pos.direction, action))
-            # if action == "movenorth":
-            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
-            # elif action == "moveeast":
-            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
-            # elif action == "movesouth":
-            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
-            # elif action == "movewest":
-            #     neighbors.append(FocusedAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
 
         # now prune:
         valid_neighbours = [n for n in neighbors if
@@ -330,8 +322,8 @@ class RunAwayAgent(AStarAgent):
         return valid_neighbours
 
     def heuristic(self, a, b, state=None):
-        (x1, y1) = (a[0], a[1])
-        (x2, y2) = (b[0], b[1])
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
         return abs(x1 - x2) + abs(y1 - y2)
 
 class FocusedAgent(AStarAgent):
