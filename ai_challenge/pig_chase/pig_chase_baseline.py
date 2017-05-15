@@ -27,6 +27,8 @@ from time import sleep
 
 from malmopy.agent import RandomAgent
 
+from evaluation import PigChaseEvaluator
+
 try:
     from malmopy.visualization.tensorboard import TensorboardVisualizer
     from malmopy.visualization.tensorboard.cntk import CntkConverter
@@ -35,7 +37,7 @@ except ImportError:
     from malmopy.visualization import ConsoleVisualizer
 
 from common import parse_clients_args, visualize_training, ENV_AGENT_NAMES, ENV_TARGET_NAMES
-from agent import PigChaseChallengeAgent, FocusedAgent, RunAwayAgent
+from agent import PigChaseChallengeAgent, FocusedAgent, RunAwayAgent, QLearnAgent
 from environment import PigChaseEnvironment, PigChaseSymbolicStateBuilder
 
 # Enforce path
@@ -84,13 +86,14 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
             # take a step
             obs, reward, agent_done = env.do(action)
 
-
     else:
 
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
         elif baseline_agent == 'runaway':
             agent = RunAwayAgent(name, ENV_AGENT_NAMES[0],ENV_TARGET_NAMES[0])
+        elif baseline_agent == 'qlearn':
+            agent = QLearnAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 1, 0.9)
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -110,8 +113,9 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
             # select an action
             action = agent.act(obs, reward, agent_done, is_training=True)
-            # take a step
+            obs_prev = obs
             obs, reward, agent_done = env.do(action)
+            agent.updateQ(obs_prev, action, obs, reward)
 
             viz_rewards.append(reward)
 
@@ -145,9 +149,9 @@ def run_experiment(agents_def):
 if __name__ == '__main__':
     arg_parser = ArgumentParser('Pig Chase baseline experiment')
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
-                            choices=['astar', 'runaway', 'random'],
+                            choices=['astar', 'runaway', 'random', 'qlearn'],
                             help='The type of baseline to run.')
-    arg_parser.add_argument('-e', '--epochs', type=int, default=5,
+    arg_parser.add_argument('-e', '--epochs', type=int, default=300,
                             help='Number of epochs to run.')
     arg_parser.add_argument('clients', nargs='*',
                             default=['127.0.0.1:10000', '127.0.0.1:10001'],

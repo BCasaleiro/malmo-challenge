@@ -17,6 +17,7 @@
 
 from __future__ import division
 
+import random
 import sys
 import time
 from collections import namedtuple
@@ -418,19 +419,48 @@ class QLearnAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
-    def __init__(self, name, target, visualizer = None):
+    def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
         super(QLearnAgent, self).__init__(name, len(QLearnAgent.ACTIONS),
                                            visualizer = visualizer)
-        self._target = str(target)
-        self._previous_target_pos = None
+        self.me = {'name': self.name}
+        self.enemy = {'name': str(enemy)}
+        self.pig = {'name': str(target)}
         self.Q = dict()
+        self.alpha = alpha
+        self.eps = eps
+        print "Im here"
+
 
     def updateQ(self, state, action, new_state, reward):
+
+        q_prev = self.get_key(state)
+        q_prev = q_prev + tuple((action,))
+
+        q_next = self.get_key(new_state)
+
+        actions = []
+        for nb in self.neighbors(self.agent_def,state=new_state[0]):
+            actions.append(QLearnAgent.ACTIONS.index(nb.action))
+
+        maximum = -25
+        max_action = 0
+        for i in range(len(actions)):
+            q_temp = q_next + tuple((self.ACTIONS[i]))
+            if q_temp in self.Q.keys():
+                if self.Q[q_temp] > maximum:
+                    maximum = self.Q[q_temp]
+                    max_action = self.ACTIONS[i]
+                    print "Here"
+
+
+        q_next = q_next + tuple((max_action,))
+
+        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.eps*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
+
+    def get_key(self, state):
         # Get current world state
         world = state[0]
         entities = state[1]
-
-        self.print_map(world)
 
         # Get my direction and enemy's direction
         for entitie in entities:
@@ -440,30 +470,45 @@ class QLearnAgent(AStarAgent):
                 dir_enemy = self.yaw_to_direction(int(entitie[u'yaw']))
 
         # Get my position
-        agent = \
+        self.me['position'] = \
             [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
 
         # Get enemy position
-        enemy = \
+        self.enemy['position'] = \
             [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
 
         # Get pig position
-        pig = \
+        self.pig['position'] = \
             [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
-        key =
+        self.agent_def = QLearnAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+
+        return tuple((self.me['position'], self.enemy['position'], self.pig['position']))
+
 
     def act(self, state, reward, done, is_training=False):
-        if done:
-            self._action_list = []
-            self._previous_target_pos = None
 
-        if state is None:
-            return np.random.randint(0, self.nb_actions)
+        q = self.get_key(state)
 
 
+        actions = []
+        for nb in self.neighbors(self.agent_def,state=state[0]):
+            actions.append(QLearnAgent.ACTIONS.index(nb.action))
+
+        maximum = -25
+        max_action = 0
+        for i in range(len(actions)):
+            q_temp = q + tuple((self.ACTIONS[i]))
+            if q_temp in self.Q.keys():
+                if self.Q[q_temp] > maximum:
+                    maximum = self.Q[q_temp]
+                    max_action = self.ACTIONS[i]
+                    print "Here"
 
 
+        if(maximum == -25):
+            return random.choice(actions)
+        return max_action
 
     def neighbors(self, pos, state=None):
         state_width = state.shape[1]
@@ -505,6 +550,10 @@ class QLearnAgent(AStarAgent):
 
     def matches(self, a, b):
         return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
 
 class PigChaseHumanAgent(GuiAgent):
     def __init__(self, name, environment, keymap, max_episodes, max_actions,
