@@ -32,6 +32,7 @@ from malmopy.agent import QLearnerAgent, BaseAgent, RandomAgent
 from malmopy.agent.gui import GuiAgent
 
 from heapq import heapify, heappop, heappush
+from collections import deque
 
 P_FOCUSED = .75
 CELL_WIDTH = 33
@@ -103,8 +104,26 @@ class RunAwayAgent(AStarAgent):
         self._previous_enemy_pos = None
         self._previous_pig_pos = None
         self._chasing_pig = True
-        print '[DEBUG] ME: {}'.format(self.me.name)
-        print '[DEBUG] ENEMY: {}'.format(self.enemy.name)
+        print '[DEBUG] ME: {}'.format(self.me['name'])
+        print '[DEBUG] ENEMY: {}'.format(self.enemy['name'])
+
+    def print_map(self, world):
+        print 'World shape: {}'.format(world.shape)
+        for l in world:
+            for c in l:
+                if 'Agent_1' in c:
+                    print 'E',
+                elif 'Agent_2' in c:
+                    print 'S',
+                elif 'Pig' in c:
+                    print 'P',
+                elif 'sand' in c:
+                    print 'X',
+                elif 'lapis_block' in c:
+                    print 'L',
+                else:
+                    print 'O',
+            print ''
 
     def move_cost(self):
         return 1
@@ -145,11 +164,7 @@ class RunAwayAgent(AStarAgent):
             current = came_from[current]
         return path, cost_so_far
 
-    # convert Minecraft yaw to:
-    # 0 = north
-    # 1 = east
-    # 2 = south
-    # 3 = west
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
     def yaw_to_direction(self, yaw):
         return ((((yaw - 45) % 360) // 90) - 1) % 4;
 
@@ -185,6 +200,8 @@ class RunAwayAgent(AStarAgent):
         world = obs[0]
         entities = obs[1]
 
+        self.print_map(world)
+
         # Get my direction and enemy's direction
         for entitie in entities:
             if entitie[u'name'] == self.me['name']:
@@ -210,13 +227,13 @@ class RunAwayAgent(AStarAgent):
             print '[DEBUG] First Round: Go for the Pig'
             self._chasing_pig = True
             path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
-            get_action_list(path)
+            self.get_action_list(path)
         else:
             # It's not the first round
-            if not pig_moved():
+            if not self.pig_moved():
                 print '[DEBUG] Pig did not move'
-                if enemy_moved():
-                    if enemy_chasing_pig():
+                if self.enemy_moved():
+                    if self.enemy_chasing_pig():
                         print '[DEBUG] Enemy chasing pig'
                         if not self._chasing_pig:
                             path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
@@ -238,10 +255,31 @@ class RunAwayAgent(AStarAgent):
                                 self.get_action_list(path_to_right)
                         self._chasing_pig = False
             else:
-                print '[DEBUG] Pig moved: reset'
-                path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
-                self.get_action_list(path)
-                self._chasing_pig = True
+                print '[DEBUG] Pig moved: ',
+                past_path, past_cost = self.find_shortest_path(self._previous_enemy_pos, self._previous_pig_pos, state=world)
+                path, cost = self.find_shortest_path(self.enemy['position'], self._previous_pig_pos, state=world)
+
+                if len(past_path) > len(path):
+                    print 'Enemy was chasing pig'
+                    if not self._chasing_pig:
+                        path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+                        self.get_action_list(path)
+                    self._chasing_pig = True
+                else:
+                    print 'Enemy was running'
+                    if self._chasing_pig:
+                        right_hole = (1, 4, 0)
+                        left_hole = (7, 4, 0)
+                        path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
+                        path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
+
+                        print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+
+                        if len(path_to_right) > len(path_to_left):
+                            self.get_action_list(path_to_left)
+                        else:
+                            self.get_action_list(path_to_right)
+                    self._chasing_pig = False
 
         self._previous_pig_pos = self.pig['position']
         self._previous_enemy_pos = self.enemy['position']
@@ -264,13 +302,13 @@ class RunAwayAgent(AStarAgent):
         else:
             nb.append( (pos[0], pos[1], 3, "turn -1"))
 
-        if pos[2] == 0 and 'Sand' not in state[pos[0] + 1][pos[1]]:
+        if pos[2] == 0 and 'sand' not in state[pos[0] + 1][pos[1]]:
             nb.append( (pos[0] + 1, pos[1], pos[2], "move 1") )
-        elif pos[2] == 1 and 'Sand' not in state[pos[0]][pos[1]]:
+        elif pos[2] == 1 and 'sand' not in state[pos[0]][pos[1] + 1]:
             nb.append( (pos[0], pos[1] + 1, pos[2], "move 1") )
-        elif pos[2] == 2 and 'Sand' not in state[pos[0]][pos[1]]:
+        elif pos[2] == 2 and 'sand' not in state[pos[0] - 1][pos[1]]:
             nb.append( (pos[0] - 1, pos[1], pos[2], "move 1") )
-        else:
+        elif pos[2] == 3 and 'sand' not in state[pos[0]][pos[1] - 1]:
             nb.append( (pos[0], pos[1] - 1, pos[2], "move 1") )
 
         return nb
