@@ -93,7 +93,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
         elif baseline_agent == 'runaway':
             agent = RunAwayAgent(name, ENV_AGENT_NAMES[0],ENV_TARGET_NAMES[0])
         elif baseline_agent == 'qlearn':
-            agent = QLearnAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 1, 0.9)
+            agent = QLearnAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 1, 0.8)
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
                             choices=['astar', 'runaway', 'random', 'qlearn'],
                             help='The type of baseline to run.')
-    arg_parser.add_argument('-e', '--epochs', type=int, default=4000,
+    arg_parser.add_argument('-e', '--epochs', type=int, default=20000,
                             help='Number of epochs to run.')
     arg_parser.add_argument('clients', nargs='*',
                             default=['127.0.0.1:10000', '127.0.0.1:10001'],

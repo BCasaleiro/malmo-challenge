@@ -426,13 +426,15 @@ class QLearnAgent(AStarAgent):
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
         self.Q = dict()
+        #np.load('Q.npy').item()
         self.alpha = alpha
         self.eps = eps
         print "Im here"
 
 
     def updateQ(self, state, action, new_state, reward):
-
+        if(state is None or new_state is None):
+            return
         q_prev = self.get_key(state)
         q_prev = q_prev + tuple((action,))
 
@@ -461,7 +463,7 @@ class QLearnAgent(AStarAgent):
         self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.eps*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
         if DEBUG: print "[UpdateQ]-Q[x]=", self.Q[q_prev]
 
-        np.save('Q.npy', self.Q)
+        #np.save('Q.npy', self.Q)
 
 
 
@@ -495,6 +497,9 @@ class QLearnAgent(AStarAgent):
 
 
     def act(self, state, reward, done, is_training=False):
+
+        if state is None:
+            return np.random.randint(0, self.nb_actions)
 
         q = self.get_key(state)
 
