@@ -497,7 +497,7 @@ class QLearnerAgent(AStarAgent):
         aux_l = len([(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k])
 
         if aux_l == 0:
-            self.enemy['position'] = (-1, -1, -1)
+            self.enemy['position'] = (-1, -1, 1)
         else:
             self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
 
@@ -607,6 +607,8 @@ class QLearnerAgent(AStarAgent):
            self._previous_pig_def = None
            self._previous_enemy_def = None
 
+        m = 0
+        len_path = 100
         if obs == None:
             return QLearnerAgent.ACTIONS.index('turn 1'), m, len_path
 
