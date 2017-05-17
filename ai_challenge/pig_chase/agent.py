@@ -502,7 +502,11 @@ class QLearnerAgent(AStarAgent):
             self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
 
         # Get pig position
-        self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+        aux_l = len([(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k])
+        if aux_l == 0:
+            self.pig['position'] = (-2, -2, 1)
+        else:
+            self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
         self.me_def = QLearnerAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
         self.pig_def = QLearnerAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
