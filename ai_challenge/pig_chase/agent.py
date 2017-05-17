@@ -494,7 +494,12 @@ class QLearnerAgent(AStarAgent):
         self.me['position'] = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
 
         # Get enemy position
-        self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
+        aux_l = len([(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k])
+
+        if aux_l == 0:
+            self.enemy['position'] = (-1, -1, -1)
+        else:
+            self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
 
         # Get pig position
         self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
@@ -511,6 +516,9 @@ class QLearnerAgent(AStarAgent):
         return QLearnerAgent.State( (self.me['position'][0], self.me['position'][1]),(self.enemy['position'][0], self.enemy['position'][1]),(self.pig['position'][0], self.pig['position'][1]),enemy_action )
 
     def updateQ(self, obs, action, new_obs, reward, intention, len_path):
+
+        if obs == None or new_obs == None:
+            return
 
         aux = self.get_key(obs)
         q_prev = ( aux, action )
@@ -578,7 +586,7 @@ class QLearnerAgent(AStarAgent):
             past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self.pig_def, state=world)
             path, cost = self._find_shortest_path(self.enemy_def, self.pig_def, state=world)
 
-        print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
+        # print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
 
         if len(path) > len(past_path):
             return False
@@ -599,11 +607,14 @@ class QLearnerAgent(AStarAgent):
            self._previous_pig_def = None
            self._previous_enemy_def = None
 
+        if obs == None:
+            return QLearnerAgent.ACTIONS.index('turn 1'), m, len_path
+
         # Get current world state
         world = obs[0]
         entities = obs[1]
 
-        self.print_map(world)
+        # self.print_map(world)
 
         # 'Xs', 'Xe', 'Xp', 'Ae'
         s = self.get_key(obs)
@@ -626,7 +637,7 @@ class QLearnerAgent(AStarAgent):
         if m == 0: # Defect
             path_to_right, cost_to_right = self._find_shortest_path(self.me_def, self.right_hole, state=world)
             path_to_left, cost_to_left = self._find_shortest_path(self.me_def, self.left_hole, state=world)
-            print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+            # print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
             if len(path_to_right) > len(path_to_left):
                 self.get_action_list(path_to_left)
@@ -643,7 +654,7 @@ class QLearnerAgent(AStarAgent):
 
         len_path = len(self._action_list)
 
-        print ''
+        # print ''
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
