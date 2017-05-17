@@ -1,6 +1,7 @@
+import sys
 
 
-f = open('test01.txt','r')
+f = open(sys.argv[1],'r')
 lines = f.read().split('\n')
 
 val = []

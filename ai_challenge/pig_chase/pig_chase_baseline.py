@@ -110,6 +110,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                 visualize_training(visualizer, step, viz_rewards)
                 viz_rewards = []
                 obs = env.reset()
+                np.save('Q.npy', agent.Q)
 
             # select an action
             action = agent.act(obs, reward, agent_done, is_training=True)
@@ -120,6 +121,9 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
             viz_rewards.append(reward)
 
             agent.inject_summaries(step)
+
+
+
 
 
 def run_experiment(agents_def):
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
                             choices=['astar', 'runaway', 'random', 'qlearn'],
                             help='The type of baseline to run.')
-    arg_parser.add_argument('-e', '--epochs', type=int, default=20000,
+    arg_parser.add_argument('-e', '--epochs', type=int, default=10000,
                             help='Number of epochs to run.')
     arg_parser.add_argument('clients', nargs='*',
                             default=['127.0.0.1:10000', '127.0.0.1:10001'],
@@ -171,3 +175,4 @@ if __name__ == '__main__':
               for role, agent in enumerate(ENV_AGENT_NAMES)]
 
     run_experiment(agents)
+

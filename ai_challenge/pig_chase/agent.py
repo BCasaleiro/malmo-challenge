@@ -425,8 +425,7 @@ class QLearnAgent(AStarAgent):
         self.me = {'name': self.name}
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
-        self.Q = dict()
-        #np.load('Q.npy').item()
+        self.Q = np.load('Q.npy').item()
         self.alpha = alpha
         self.eps = eps
         print "Im here"
@@ -483,10 +482,12 @@ class QLearnAgent(AStarAgent):
         self.me['position'] = \
             [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
 
+        temp_enemy = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k]
         # Get enemy position
-        self.enemy['position'] = \
-            [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
-
+        if len(temp_enemy)>0 :
+            self.enemy['position'] = temp_enemy[0]
+        else:
+            self.enemy['position'] = tuple((-1, -1, 1))
         # Get pig position
         self.pig['position'] = \
             [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
