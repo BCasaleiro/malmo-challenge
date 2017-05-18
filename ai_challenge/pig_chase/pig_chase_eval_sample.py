@@ -17,9 +17,10 @@
 
 from common import ENV_AGENT_NAMES
 from evaluation import PigChaseEvaluator
-from environment import PigChaseTopDownStateBuilder
+from environment import PigChaseTopDownStateBuilder, PigChaseSymbolicStateBuilder
 from malmopy.agent import RandomAgent
 from agent import FocusedAgent, QLearnerAgent
+from common import ENV_AGENT_NAMES, ENV_TARGET_NAMES
 
 
 if __name__ == '__main__':
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     agent_100k = FocusedAgent(ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0])
     agent_500k = QLearnerAgent(ENV_AGENT_NAMES[1], ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
 
-    eval = PigChaseEvaluator(clients, agent, agent_500k, PigChaseTopDownStateBuilder())
+    eval = PigChaseEvaluator(clients, agent_100k, agent_500k, PigChaseSymbolicStateBuilder())
     eval.run()
 
-    eval.save('My Exp 1', 'pig_chase_results.json')
+    eval.save('My Exp 1', 'results/pig_chase_results.json')

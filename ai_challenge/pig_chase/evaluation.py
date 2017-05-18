@@ -67,6 +67,8 @@ class PigChaseEvaluator(object):
 
         metrics['experimentname'] = experiment_name
 
+        print metrics
+
         try:
             filepath = abspath(filepath)
             parent = join(pardir, filepath)
@@ -90,11 +92,11 @@ class PigChaseEvaluator(object):
         print('==================================')
         print('Starting evaluation of Agent @100k')
 
-        p = Process(target=run_challenge_agent, args=(self._clients,))
-        p.start()
-        sleep(5)
-        agent_loop(self._agent_100k, env, self._accumulators['100k'])
-        p.terminate()
+        #p = Process(target=run_challenge_agent, args=(self._clients,))
+        #p.start()
+        #sleep(5)
+        #agent_loop(self._agent_100k, env, self._accumulators['100k'])
+        #p.terminate()
 
         print('==================================')
         print('Starting evaluation of Agent @500k')
@@ -124,7 +126,7 @@ def agent_loop(agent, env, metrics_acc):
     while episode < EVAL_EPISODES:
         # check if env needs reset
         if env.done:
-            print('Episode %d (%.2f)%%' % (episode, (episode / EVAL_EPISODES) * 100.))
+            print('Episode %d (%.2f)%%' % (episode, (float(episode) / EVAL_EPISODES) * 100.))
 
             obs = env.reset()
             while obs is None:
@@ -136,7 +138,10 @@ def agent_loop(agent, env, metrics_acc):
             episode += 1
 
         # select an action
-        action = agent.act(obs, reward, agent_done, is_training=True)
+        if agent.name == "Agent_1":
+            action = agent.act(obs, reward, agent_done, is_training=False)
+        else:
+            action, intention, len_path = agent.act(obs, reward, agent_done, is_training=True)
         # take a step
         obs, reward, agent_done = env.do(action)
 

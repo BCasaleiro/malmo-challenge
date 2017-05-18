@@ -90,6 +90,8 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
         elif baseline_agent == 'qlearner':
             agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
+        elif baseline_agent == 'runaway':
+            agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0])
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -153,7 +155,7 @@ def run_experiment(agents_def):
 if __name__ == '__main__':
     arg_parser = ArgumentParser('Pig Chase baseline experiment')
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
-                            choices=['astar', 'random', 'qlearner'],
+                            choices=['astar', 'random', 'qlearner', 'runaway'],
                             help='The type of baseline to run.')
     arg_parser.add_argument('-e', '--epochs', type=int, default=5,
                             help='Number of epochs to run.')
