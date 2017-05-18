@@ -1,0 +1,343 @@
+Pillow found, setting as default backend.
+Cannot import tensorboard, using ConsoleVisualizer.
+248
+[-] 10 : Training/reward per episode -> -4.000
+[-] 10 : Training/max.reward -> 4.000
+[-] 10 : Training/min.reward -> -1.000
+[-] 10 : Training/actions per episode -> 8.000
+[-] 19 : Training/reward per episode -> -4.000
+[-] 19 : Training/max.reward -> 4.000
+[-] 19 : Training/min.reward -> -1.000
+[-] 19 : Training/actions per episode -> 8.000
+[-] 22 : Training/reward per episode -> 2.000
+[-] 22 : Training/max.reward -> 4.000
+[-] 22 : Training/min.reward -> -1.000
+[-] 22 : Training/actions per episode -> 2.000
+[-] 37 : Training/reward per episode -> -10.000
+[-] 37 : Training/max.reward -> 4.000
+[-] 37 : Training/min.reward -> -1.000
+[-] 37 : Training/actions per episode -> 14.000
+[-] 46 : Training/reward per episode -> -4.000
+[-] 46 : Training/max.reward -> 4.000
+[-] 46 : Training/min.reward -> -1.000
+[-] 46 : Training/actions per episode -> 8.000
+[-] 55 : Training/reward per episode -> 17.000
+[-] 55 : Training/max.reward -> 25.000
+[-] 55 : Training/min.reward -> -1.000
+[-] 55 : Training/actions per episode -> 8.000
+[-] 65 : Training/reward per episode -> -5.000
+[-] 65 : Training/max.reward -> 4.000
+[-] 65 : Training/min.reward -> -1.000
+[-] 65 : Training/actions per episode -> 9.000
+[-] 67 : Training/reward per episode -> 3.000
+[-] 67 : Training/max.reward -> 4.000
+[-] 67 : Training/min.reward -> -1.000
+[-] 67 : Training/actions per episode -> 1.000
+[-] 75 : Training/reward per episode -> -3.000
+[-] 75 : Training/max.reward -> 4.000
+[-] 75 : Training/min.reward -> -1.000
+[-] 75 : Training/actions per episode -> 7.000
+[-] 82 : Training/reward per episode -> -2.000
+[-] 82 : Training/max.reward -> 4.000
+[-] 82 : Training/min.reward -> -1.000
+[-] 82 : Training/actions per episode -> 6.000
+[-] 107 : Training/reward per episode -> -25.000
+[-] 107 : Training/max.reward -> -1.000
+[-] 107 : Training/min.reward -> -1.000
+[-] 107 : Training/actions per episode -> 24.000
+[-] 116 : Training/reward per episode -> 16.000
+[-] 116 : Training/max.reward -> 24.000
+[-] 116 : Training/min.reward -> -1.000
+[-] 116 : Training/actions per episode -> 8.000
+[-] 125 : Training/reward per episode -> 16.000
+[-] 125 : Training/max.reward -> 24.000
+[-] 125 : Training/min.reward -> -1.000
+[-] 125 : Training/actions per episode -> 8.000
+[-] 131 : Training/reward per episode -> -1.000
+[-] 131 : Training/max.reward -> 4.000
+[-] 131 : Training/min.reward -> -1.000
+[-] 131 : Training/actions per episode -> 5.000
+[-] 142 : Training/reward per episode -> -6.000
+[-] 142 : Training/max.reward -> 4.000
+[-] 142 : Training/min.reward -> -1.000
+[-] 142 : Training/actions per episode -> 10.000
+[-] 165 : Training/reward per episode -> -18.000
+[-] 165 : Training/max.reward -> 4.000
+[-] 165 : Training/min.reward -> -1.000
+[-] 165 : Training/actions per episode -> 22.000
+[-] 167 : Training/reward per episode -> 3.000
+[-] 167 : Training/max.reward -> 4.000
+[-] 167 : Training/min.reward -> -1.000
+[-] 167 : Training/actions per episode -> 1.000
+[-] 186 : Training/reward per episode -> -14.000
+[-] 186 : Training/max.reward -> 4.000
+[-] 186 : Training/min.reward -> -1.000
+[-] 186 : Training/actions per episode -> 18.000
+[-] 190 : Training/reward per episode -> 21.000
+[-] 190 : Training/max.reward -> 24.000
+[-] 190 : Training/min.reward -> -1.000
+[-] 190 : Training/actions per episode -> 3.000
+[-] 192 : Training/reward per episode -> 3.000
+[-] 192 : Training/max.reward -> 4.000
+[-] 192 : Training/min.reward -> -1.000
+[-] 192 : Training/actions per episode -> 1.000
+[-] 217 : Training/reward per episode -> -25.000
+[-] 217 : Training/max.reward -> -1.000
+[-] 217 : Training/min.reward -> -1.000
+[-] 217 : Training/actions per episode -> 24.000
+[-] 226 : Training/reward per episode -> -4.000
+[-] 226 : Training/max.reward -> 4.000
+[-] 226 : Training/min.reward -> -1.000
+[-] 226 : Training/actions per episode -> 8.000
+[-] 241 : Training/reward per episode -> 10.000
+[-] 241 : Training/max.reward -> 24.000
+[-] 241 : Training/min.reward -> -1.000
+[-] 241 : Training/actions per episode -> 14.000
+[-] 249 : Training/reward per episode -> -3.000
+[-] 249 : Training/max.reward -> 4.000
+[-] 249 : Training/min.reward -> -1.000
+[-] 249 : Training/actions per episode -> 7.000
+[-] 263 : Training/reward per episode -> 11.000
+[-] 263 : Training/max.reward -> 24.000
+[-] 263 : Training/min.reward -> -1.000
+[-] 263 : Training/actions per episode -> 13.000
+[-] 286 : Training/reward per episode -> 2.000
+[-] 286 : Training/max.reward -> 24.000
+[-] 286 : Training/min.reward -> -1.000
+[-] 286 : Training/actions per episode -> 22.000
+[-] 294 : Training/reward per episode -> -3.000
+[-] 294 : Training/max.reward -> 4.000
+[-] 294 : Training/min.reward -> -1.000
+[-] 294 : Training/actions per episode -> 7.000
+[-] 316 : Training/reward per episode -> -17.000
+[-] 316 : Training/max.reward -> 4.000
+[-] 316 : Training/min.reward -> -1.000
+[-] 316 : Training/actions per episode -> 21.000
+[-] 334 : Training/reward per episode -> -18.000
+[-] 334 : Training/max.reward -> -1.000
+[-] 334 : Training/min.reward -> -1.000
+[-] 334 : Training/actions per episode -> 17.000
+[-] 359 : Training/reward per episode -> -20.000
+[-] 359 : Training/max.reward -> 4.000
+[-] 359 : Training/min.reward -> -1.000
+[-] 359 : Training/actions per episode -> 24.000
+[-] 363 : Training/reward per episode -> 1.000
+[-] 363 : Training/max.reward -> 4.000
+[-] 363 : Training/min.reward -> -1.000
+[-] 363 : Training/actions per episode -> 3.000
+[-] 376 : Training/reward per episode -> -8.000
+[-] 376 : Training/max.reward -> 4.000
+[-] 376 : Training/min.reward -> -1.000
+[-] 376 : Training/actions per episode -> 12.000
+[-] 380 : Training/reward per episode -> 1.000
+[-] 380 : Training/max.reward -> 4.000
+[-] 380 : Training/min.reward -> -1.000
+[-] 380 : Training/actions per episode -> 3.000
+[-] 387 : Training/reward per episode -> 18.000
+[-] 387 : Training/max.reward -> 24.000
+[-] 387 : Training/min.reward -> -1.000
+[-] 387 : Training/actions per episode -> 6.000
+[-] 397 : Training/reward per episode -> -5.000
+[-] 397 : Training/max.reward -> 4.000
+[-] 397 : Training/min.reward -> -1.000
+[-] 397 : Training/actions per episode -> 9.000
+[-] 402 : Training/reward per episode -> 0.000
+[-] 402 : Training/max.reward -> 4.000
+[-] 402 : Training/min.reward -> -1.000
+[-] 402 : Training/actions per episode -> 4.000
+[-] 408 : Training/reward per episode -> -1.000
+[-] 408 : Training/max.reward -> 4.000
+[-] 408 : Training/min.reward -> -1.000
+[-] 408 : Training/actions per episode -> 5.000
+[-] 411 : Training/reward per episode -> 22.000
+[-] 411 : Training/max.reward -> 24.000
+[-] 411 : Training/min.reward -> -1.000
+[-] 411 : Training/actions per episode -> 2.000
+[-] 420 : Training/reward per episode -> 16.000
+[-] 420 : Training/max.reward -> 24.000
+[-] 420 : Training/min.reward -> -1.000
+[-] 420 : Training/actions per episode -> 8.000
+[-] 421 : Training/reward per episode -> 4.000
+[-] 421 : Training/max.reward -> 4.000
+[-] 421 : Training/min.reward -> 4.000
+[-] 421 : Training/actions per episode -> 0.000
+[-] 440 : Training/reward per episode -> -14.000
+[-] 440 : Training/max.reward -> 4.000
+[-] 440 : Training/min.reward -> -1.000
+[-] 440 : Training/actions per episode -> 18.000
+[-] 448 : Training/reward per episode -> -3.000
+[-] 448 : Training/max.reward -> 4.000
+[-] 448 : Training/min.reward -> -1.000
+[-] 448 : Training/actions per episode -> 7.000
+[-] 462 : Training/reward per episode -> -9.000
+[-] 462 : Training/max.reward -> 4.000
+[-] 462 : Training/min.reward -> -1.000
+[-] 462 : Training/actions per episode -> 13.000
+[-] 480 : Training/reward per episode -> -13.000
+[-] 480 : Training/max.reward -> 4.000
+[-] 480 : Training/min.reward -> -1.000
+[-] 480 : Training/actions per episode -> 17.000
+[-] 489 : Training/reward per episode -> -4.000
+[-] 489 : Training/max.reward -> 4.000
+[-] 489 : Training/min.reward -> -1.000
+[-] 489 : Training/actions per episode -> 8.000
+[-] 514 : Training/reward per episode -> -25.000
+[-] 514 : Training/max.reward -> -1.000
+[-] 514 : Training/min.reward -> -1.000
+[-] 514 : Training/actions per episode -> 24.000
+[-] 528 : Training/reward per episode -> -9.000
+[-] 528 : Training/max.reward -> 4.000
+[-] 528 : Training/min.reward -> -1.000
+[-] 528 : Training/actions per episode -> 13.000
+[-] 553 : Training/reward per episode -> -25.000
+[-] 553 : Training/max.reward -> -1.000
+[-] 553 : Training/min.reward -> -1.000
+[-] 553 : Training/actions per episode -> 24.000
+[-] 570 : Training/reward per episode -> 8.000
+[-] 570 : Training/max.reward -> 24.000
+[-] 570 : Training/min.reward -> -1.000
+[-] 570 : Training/actions per episode -> 16.000
+[-] 576 : Training/reward per episode -> 19.000
+[-] 576 : Training/max.reward -> 24.000
+[-] 576 : Training/min.reward -> -1.000
+[-] 576 : Training/actions per episode -> 5.000
+[-] 590 : Training/reward per episode -> -9.000
+[-] 590 : Training/max.reward -> 4.000
+[-] 590 : Training/min.reward -> -1.000
+[-] 590 : Training/actions per episode -> 13.000
+[-] 596 : Training/reward per episode -> 19.000
+[-] 596 : Training/max.reward -> 24.000
+[-] 596 : Training/min.reward -> -1.000
+[-] 596 : Training/actions per episode -> 5.000
+[-] 600 : Training/reward per episode -> 21.000
+[-] 600 : Training/max.reward -> 24.000
+[-] 600 : Training/min.reward -> -1.000
+[-] 600 : Training/actions per episode -> 3.000
+[-] 602 : Training/reward per episode -> 23.000
+[-] 602 : Training/max.reward -> 24.000
+[-] 602 : Training/min.reward -> -1.000
+[-] 602 : Training/actions per episode -> 1.000
+[-] 627 : Training/reward per episode -> -25.000
+[-] 627 : Training/max.reward -> -1.000
+[-] 627 : Training/min.reward -> -1.000
+[-] 627 : Training/actions per episode -> 24.000
+[-] 645 : Training/reward per episode -> -13.000
+[-] 645 : Training/max.reward -> 4.000
+[-] 645 : Training/min.reward -> -1.000
+[-] 645 : Training/actions per episode -> 17.000
+[-] 649 : Training/reward per episode -> 22.000
+[-] 649 : Training/max.reward -> 25.000
+[-] 649 : Training/min.reward -> -1.000
+[-] 649 : Training/actions per episode -> 3.000
+[-] 650 : Training/reward per episode -> 0.000
+[-] 650 : Training/max.reward -> 0.000
+[-] 650 : Training/min.reward -> 0.000
+[-] 650 : Training/actions per episode -> 0.000
+[-] 669 : Training/reward per episode -> 6.000
+[-] 669 : Training/max.reward -> 24.000
+[-] 669 : Training/min.reward -> -1.000
+[-] 669 : Training/actions per episode -> 18.000
+[-] 680 : Training/reward per episode -> -6.000
+[-] 680 : Training/max.reward -> 4.000
+[-] 680 : Training/min.reward -> -1.000
+[-] 680 : Training/actions per episode -> 10.000
+[-] 704 : Training/reward per episode -> -19.000
+[-] 704 : Training/max.reward -> 4.000
+[-] 704 : Training/min.reward -> -1.000
+[-] 704 : Training/actions per episode -> 23.000
+[-] 718 : Training/reward per episode -> 12.000
+[-] 718 : Training/max.reward -> 25.000
+[-] 718 : Training/min.reward -> -1.000
+[-] 718 : Training/actions per episode -> 13.000
+[-] 723 : Training/reward per episode -> 0.000
+[-] 723 : Training/max.reward -> 4.000
+[-] 723 : Training/min.reward -> -1.000
+[-] 723 : Training/actions per episode -> 4.000
+[-] 742 : Training/reward per episode -> -14.000
+[-] 742 : Training/max.reward -> 4.000
+[-] 742 : Training/min.reward -> -1.000
+[-] 742 : Training/actions per episode -> 18.000
+[-] 760 : Training/reward per episode -> -13.000
+[-] 760 : Training/max.reward -> 4.000
+[-] 760 : Training/min.reward -> -1.000
+[-] 760 : Training/actions per episode -> 17.000
+[-] 767 : Training/reward per episode -> 18.000
+[-] 767 : Training/max.reward -> 24.000
+[-] 767 : Training/min.reward -> -1.000
+[-] 767 : Training/actions per episode -> 6.000
+[-] 774 : Training/reward per episode -> -2.000
+[-] 774 : Training/max.reward -> 4.000
+[-] 774 : Training/min.reward -> -1.000
+[-] 774 : Training/actions per episode -> 6.000
+[-] 781 : Training/reward per episode -> -2.000
+[-] 781 : Training/max.reward -> 4.000
+[-] 781 : Training/min.reward -> -1.000
+[-] 781 : Training/actions per episode -> 6.000
+[-] 787 : Training/reward per episode -> -1.000
+[-] 787 : Training/max.reward -> 4.000
+[-] 787 : Training/min.reward -> -1.000
+[-] 787 : Training/actions per episode -> 5.000
+[-] 812 : Training/reward per episode -> -25.000
+[-] 812 : Training/max.reward -> -1.000
+[-] 812 : Training/min.reward -> -1.000
+[-] 812 : Training/actions per episode -> 24.000
+[-] 837 : Training/reward per episode -> -25.000
+[-] 837 : Training/max.reward -> -1.000
+[-] 837 : Training/min.reward -> -1.000
+[-] 837 : Training/actions per episode -> 24.000
+[-] 841 : Training/reward per episode -> 1.000
+[-] 841 : Training/max.reward -> 4.000
+[-] 841 : Training/min.reward -> -1.000
+[-] 841 : Training/actions per episode -> 3.000
+[-] 866 : Training/reward per episode -> -25.000
+[-] 866 : Training/max.reward -> -1.000
+[-] 866 : Training/min.reward -> -1.000
+[-] 866 : Training/actions per episode -> 24.000
+[-] 871 : Training/reward per episode -> 20.000
+[-] 871 : Training/max.reward -> 24.000
+[-] 871 : Training/min.reward -> -1.000
+[-] 871 : Training/actions per episode -> 4.000
+[-] 879 : Training/reward per episode -> -3.000
+[-] 879 : Training/max.reward -> 4.000
+[-] 879 : Training/min.reward -> -1.000
+[-] 879 : Training/actions per episode -> 7.000
+[-] 894 : Training/reward per episode -> -10.000
+[-] 894 : Training/max.reward -> 4.000
+[-] 894 : Training/min.reward -> -1.000
+[-] 894 : Training/actions per episode -> 14.000
+[-] 917 : Training/reward per episode -> -18.000
+[-] 917 : Training/max.reward -> 4.000
+[-] 917 : Training/min.reward -> -1.000
+[-] 917 : Training/actions per episode -> 22.000
+[-] 924 : Training/reward per episode -> 18.000
+[-] 924 : Training/max.reward -> 24.000
+[-] 924 : Training/min.reward -> -1.000
+[-] 924 : Training/actions per episode -> 6.000
+[-] 930 : Training/reward per episode -> -1.000
+[-] 930 : Training/max.reward -> 4.000
+[-] 930 : Training/min.reward -> -1.000
+[-] 930 : Training/actions per episode -> 5.000
+[-] 936 : Training/reward per episode -> -1.000
+[-] 936 : Training/max.reward -> 4.000
+[-] 936 : Training/min.reward -> -1.000
+[-] 936 : Training/actions per episode -> 5.000
+[-] 938 : Training/reward per episode -> 23.000
+[-] 938 : Training/max.reward -> 24.000
+[-] 938 : Training/min.reward -> -1.000
+[-] 938 : Training/actions per episode -> 1.000
+[-] 955 : Training/reward per episode -> 8.000
+[-] 955 : Training/max.reward -> 24.000
+[-] 955 : Training/min.reward -> -1.000
+[-] 955 : Training/actions per episode -> 16.000
+[-] 980 : Training/reward per episode -> -25.000
+[-] 980 : Training/max.reward -> -1.000
+[-] 980 : Training/min.reward -> -1.000
+[-] 980 : Training/actions per episode -> 24.000
+[-] 982 : Training/reward per episode -> 23.000
+[-] 982 : Training/max.reward -> 24.000
+[-] 982 : Training/min.reward -> -1.000
+[-] 982 : Training/actions per episode -> 1.000
+[-] 988 : Training/reward per episode -> -1.000
+[-] 988 : Training/max.reward -> 4.000
+[-] 988 : Training/min.reward -> -1.000
+[-] 988 : Training/actions per episode -> 5.000

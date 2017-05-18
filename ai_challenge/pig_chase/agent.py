@@ -450,10 +450,10 @@ class PigChaseHumanAgent(GuiAgent):
         self._root.quit()
         sys.exit()
 
+State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
 
 class QLearnerAgent(AStarAgent):
-    ACTIONS = ENV_ACTIONS
-    State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
+    ACTIONS = ENV_ACTIONS    
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
     def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
@@ -471,7 +471,10 @@ class QLearnerAgent(AStarAgent):
         self.right_hole = QLearnerAgent.Neighbour(1, 7, 4, 0, "")
         self.left_hole = QLearnerAgent.Neighbour(1, 1, 4, 0, "")
 
-        self.Q = {}
+        
+        self.Q = np.load('Q.npy').item()
+        #print self.Q
+        print len(self.Q.keys())
         self.alpha = float(alpha)
         self.eps = float(eps)
 
@@ -517,7 +520,7 @@ class QLearnerAgent(AStarAgent):
         else:
             enemy_action = self.enemy_chasing_pig(world)
 
-        return QLearnerAgent.State( (self.me['position'][0], self.me['position'][1]),(self.enemy['position'][0], self.enemy['position'][1]),(self.pig['position'][0], self.pig['position'][1]),enemy_action )
+        return State( (self.me['position'][0], self.me['position'][1]),(self.enemy['position'][0], self.enemy['position'][1]),(self.pig['position'][0], self.pig['position'][1]),enemy_action )
 
     def updateQ(self, obs, action, new_obs, reward, intention, len_path):
 
