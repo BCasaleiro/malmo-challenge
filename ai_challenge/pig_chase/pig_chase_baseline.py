@@ -34,7 +34,7 @@ except ImportError:
     from malmopy.visualization import ConsoleVisualizer
 
 from common import parse_clients_args, visualize_training, ENV_AGENT_NAMES, ENV_TARGET_NAMES
-from agent import PigChaseChallengeAgent, FocusedAgent
+from agent import PigChaseChallengeAgent, FocusedAgent, RunAwayAgent, QLearnHighAgent, QLearnLowAgent
 from environment import PigChaseEnvironment, PigChaseSymbolicStateBuilder
 
 # Enforce path
@@ -91,9 +91,9 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
         elif baseline_agent == 'runaway':
             agent = RunAwayAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0])
         elif baseline_agent == 'qlearnhigh':
-            agent = QLearnHighAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.5, 0.8, 0.05)
+            agent = QLearnHighAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.8, 0.05)
         elif baseline_agent == 'qlearnlow':
-            agent = QLearnLowAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.5, 0.8, 0.05)
+            agent = QLearnLowAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.8, 0.05)
         else:
             agent = RandomAgent(name, env.available_actions)
 

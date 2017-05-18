@@ -31,6 +31,9 @@ from malmopy.agent import AStarAgent
 from malmopy.agent import QLearnerAgent, BaseAgent, RandomAgent
 from malmopy.agent.gui import GuiAgent
 
+from heapq import heapify, heappop, heappush
+from collections import deque
+
 P_FOCUSED = .5
 P_RANDOM  = 0.25
 P_DEFECT = 0.25
@@ -62,7 +65,7 @@ class PigChaseChallengeAgent(BaseAgent):
                                          visualizer = visualizer))
         self._agents.append(RandomAgent(name, nb_actions,
                                         visualizer = visualizer))
-         self._agents.append(DefectAgent(name, visualizer = visualizer))
+        self._agents.append(DefectAgent(name, visualizer = visualizer))
         self.current_agent = self._select_agent(P_FOCUSED)
 
     def _select_agent(self, p_focused):
@@ -463,8 +466,8 @@ class RunAwayAgent(AStarAgent):
         self._previous_enemy_pos = None
         self._previous_pig_pos = None
         self._chasing_pig = True
-        print '[DEBUG] ME: {}'.format(self.me['name'])
-        print '[DEBUG] ENEMY: {}'.format(self.enemy['name'])
+        #print '[DEBUG] ME: {}'.format(self.me['name'])
+        #print '[DEBUG] ENEMY: {}'.format(self.enemy['name'])
 
     def print_map(self, world):
         print 'World shape: {}'.format(world.shape)
@@ -536,7 +539,7 @@ class RunAwayAgent(AStarAgent):
     def enemy_chasing_pig(self, world):
         past_path, past_cost = self._find_shortest_path(self._previous_enemy_pos, self.pig['position'], state=world)
         path, cost = self._find_shortest_path(self.enemy['position'], self.pig['position'], state=world)
-        print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
+        #print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
 
         if len(path) > len(past_path):
             return False
@@ -559,7 +562,7 @@ class RunAwayAgent(AStarAgent):
         world = obs[0]
         entities = obs[1]
 
-        self.print_map(world)
+        #self.print_map(world)
 
         # Get my direction and enemy's direction
         for entitie in entities:
@@ -577,36 +580,36 @@ class RunAwayAgent(AStarAgent):
         # Get pig position
         self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
-        print '[DEBUG] My Position: {}'.format(self.me['position'])
-        print '[DEBUG] Enemy Position: {}'.format(self.enemy['position'])
-        print '[DEBUG] Pig Position: {}'.format(self.pig['position'])
+        #print '[DEBUG] My Position: {}'.format(self.me['position'])
+        #print '[DEBUG] Enemy Position: {}'.format(self.enemy['position'])
+        #print '[DEBUG] Pig Position: {}'.format(self.pig['position'])
 
         #It's the first round -> Go for the pig
         if self._previous_enemy_pos == None:
-            print '[DEBUG] First Round: Go for the Pig'
+            #print '[DEBUG] First Round: Go for the Pig'
             self._chasing_pig = True
             path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
             self.get_action_list(path)
         else:
             # It's not the first round
             if not self.pig_moved():
-                print '[DEBUG] Pig did not move'
+                #print '[DEBUG] Pig did not move'
                 if self.enemy_moved():
                     if self.enemy_chasing_pig(world):
-                        print '[DEBUG] Enemy chasing pig'
+                        #print '[DEBUG] Enemy chasing pig'
                         if not self._chasing_pig:
                             path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
                             self.get_action_list(path)
                         self._chasing_pig = True
                     else:
-                        print '[DEBUG] Enemy running away'
+                        #print '[DEBUG] Enemy running away'
                         if self._chasing_pig:
                             right_hole = (1, 4, 0)
                             left_hole = (7, 4, 0)
                             path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
                             path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
 
-                            print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+                            #print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
                             if len(path_to_right) > len(path_to_left):
                                 self.get_action_list(path_to_left)
@@ -614,25 +617,25 @@ class RunAwayAgent(AStarAgent):
                                 self.get_action_list(path_to_right)
                         self._chasing_pig = False
             else:
-                print '[DEBUG] Pig moved: ',
+                #print '[DEBUG] Pig moved: ',
                 past_path, past_cost = self.find_shortest_path(self._previous_enemy_pos, self._previous_pig_pos, state=world)
                 path, cost = self.find_shortest_path(self.enemy['position'], self._previous_pig_pos, state=world)
 
                 if len(past_path) > len(path):
-                    print 'Enemy was chasing pig'
+                    #print 'Enemy was chasing pig'
                     if not self._chasing_pig:
                         path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
                         self.get_action_list(path)
                     self._chasing_pig = True
                 else:
-                    print 'Enemy was running'
+                    #print 'Enemy was running'
                     if self._chasing_pig:
                         right_hole = (1, 4, 0)
                         left_hole = (7, 4, 0)
                         path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
                         path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
 
-                        print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+                        #print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
                         if len(path_to_right) > len(path_to_left):
                             self.get_action_list(path_to_left)
@@ -643,7 +646,7 @@ class RunAwayAgent(AStarAgent):
         self._previous_pig_pos = self.pig['position']
         self._previous_enemy_pos = self.enemy['position']
 
-        print ''
+        #print ''
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
@@ -783,7 +786,7 @@ class QLearnHighAgent(AStarAgent):
         if(maximum == -25):
 			return random.choice(actions)
 
-        print "Max action:", max_action
+        #print "Max action:", max_action
         return max_action
 
     def neighbors(self, pos, state=None):
@@ -1077,4 +1080,92 @@ class QLearnLowAgent(AStarAgent):
         (x1, y1) = (a.x, a.z)
         (x2, y2) = (b.x, b.z)
         return abs(x1 - x2) + abs(y1 - y2)
+
+
+class DefectAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+    Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
+
+    def __init__(self, name, visualizer = None):
+        super(DefectAgent, self).__init__(name, len(DefectAgent.ACTIONS),visualizer = visualizer)
+        self.me = { 'name': str(name) }
+        self._action_list = []
+
+        self.right_hole = DefectAgent.Neighbour(1, 7, 4, 0, "")
+        self.left_hole = DefectAgent.Neighbour(1, 1, 4, 0, "")
+
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
+
+    def get_action_list(self, path):
+        self._action_list = []
+        for point in path:
+            self._action_list.append(point.action)
+
+    def act(self, obs, reward, done, is_training=False):
+        if done:
+           self._action_list = []
+
+        if obs is None:
+        	return np.random.randint(0, self.nb_actions)
+           
+        world = obs[0]
+        entities = obs[1]
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction( int(entitie[u'yaw']) )
+
+        me = [(j, i) for i, v in enumerate(obs) for j, k in enumerate(v) if self.name in k]
+
+        # Get my position
+        self.me['position'] = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+        self.me_def = DefectAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+
+        path_to_right, cost_to_right = self._find_shortest_path(self.me_def, self.right_hole, state=world)
+        path_to_left, cost_to_left = self._find_shortest_path(self.me_def, self.left_hole, state=world)
+
+        if len(path_to_right) > len(path_to_left):
+            self.get_action_list(path_to_left)
+        else:
+            self.get_action_list(path_to_right)
         
+
+        if self._action_list is not None and len(self._action_list) > 0:
+            action = self._action_list.pop(0)
+            return DefectAgent.ACTIONS.index(action)
+
+        return DefectAgent.ACTIONS.index('turn 1')
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
+
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in FocusedAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(FocusedAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),pos.direction, action))
+
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
