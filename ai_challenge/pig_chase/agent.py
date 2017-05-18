@@ -694,3 +694,91 @@ class QLearnerAgent(AStarAgent):
         (x1, y1) = (a.x, a.z)
         (x2, y2) = (b.x, b.z)
         return abs(x1 - x2) + abs(y1 - y2)
+
+class DefectAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+    Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
+
+    def __init__(self, name, visualizer = None):
+        super(DefectAgent, self).__init__(name, len(DefectAgent.ACTIONS),visualizer = visualizer)
+        self.me = { 'name': str(name) }
+        self._action_list = []
+
+        self.right_hole = QLearnerAgent.Neighbour(1, 7, 4, 0, "")
+        self.left_hole = QLearnerAgent.Neighbour(1, 1, 4, 0, "")
+
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
+
+    def get_action_list(self, path):
+        self._action_list = []
+        for point in path:
+            self._action_list.append(point.action)
+
+    def act(self, obs, reward, done, is_training=False):
+        if done:
+           self._action_list = []
+
+        if obs is None:
+        	return np.random.randint(0, self.nb_actions)
+           
+        world = obs[0]
+        entities = obs[1]
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction( int(entitie[u'yaw']) )
+
+        me = [(j, i) for i, v in enumerate(obs) for j, k in enumerate(v) if self.name in k]
+
+        # Get my position
+        self.me['position'] = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+        self.me_def = DefectAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+
+        path_to_right, cost_to_right = self._find_shortest_path(self.me_def, self.right_hole, state=world)
+        path_to_left, cost_to_left = self._find_shortest_path(self.me_def, self.left_hole, state=world)
+
+        if len(path_to_right) > len(path_to_left):
+            self.get_action_list(path_to_left)
+        else:
+            self.get_action_list(path_to_right)
+        
+
+        if self._action_list is not None and len(self._action_list) > 0:
+            action = self._action_list.pop(0)
+            return DefectAgent.ACTIONS.index(action)
+
+        return DefectAgent.ACTIONS.index('turn 1')
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
+
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in FocusedAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(FocusedAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),pos.direction, action))
+
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
