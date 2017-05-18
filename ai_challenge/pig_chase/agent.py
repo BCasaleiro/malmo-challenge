@@ -36,7 +36,7 @@ P_FOCUSED = .75
 CELL_WIDTH = 33
 
 State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
-
+	
 class PigChaseQLearnerAgent(QLearnerAgent):
     """A thin wrapper around QLearnerAgent that normalizes rewards to [-1,1]"""
 
@@ -451,13 +451,13 @@ class PigChaseHumanAgent(GuiAgent):
         self._root.quit()
         sys.exit()
 
+State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
 
 class QLearnerAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
-    
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
-    def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
+    def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
         super(QLearnerAgent, self).__init__(name, len(QLearnerAgent.ACTIONS),visualizer = visualizer)
         self.me = { 'name': str(name) }
         self.enemy = { 'name': str(enemy) }
@@ -473,7 +473,9 @@ class QLearnerAgent(AStarAgent):
         self.left_hole = QLearnerAgent.Neighbour(1, 1, 4, 0, "")
 
         self.Q = np.load('Q.npy').item()
+
         self.alpha = float(alpha)
+        self.gamma = float(gamma)
         self.eps = float(eps)
 
     def matches(self, a, b):
@@ -638,7 +640,7 @@ class QLearnerAgent(AStarAgent):
                 maximum = self.Q[S]
                 m = i
 
-        if maximum == -25:
+        if maximum == -25 or random.random() < self.eps:
             m = random.choice(A)
 
         if m == 0: # Defect

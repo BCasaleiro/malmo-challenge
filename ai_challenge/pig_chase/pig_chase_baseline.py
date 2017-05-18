@@ -89,7 +89,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
         elif baseline_agent == 'qlearner':
-            agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.4, 0.9)
+            agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -97,16 +97,16 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
         reward = 0
         agent_done = False
         viz_rewards = []
-
         max_training_steps = EPOCH_SIZE * max_epochs
         for step in range(1, max_training_steps+1):
-
             # check if env needs reset
             if env.done:
 
                 visualize_training(visualizer, step, viz_rewards)
                 viz_rewards = []
                 obs = env.reset()
+		if step%10000==0:
+			np.save('Q.npy',agent.Q)
 
             # select an action
             if baseline_agent == 'qlearner':
@@ -124,7 +124,6 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
             agent.inject_summaries(step)
 
-        np.save('Q.npy', agent.Q)
 
 
 def run_experiment(agents_def):
