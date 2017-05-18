@@ -34,6 +34,8 @@ from malmopy.agent.gui import GuiAgent
 from heapq import heapify, heappop, heappush
 from collections import deque
 
+import random
+
 P_FOCUSED = .5
 P_RANDOM  = 0.25
 P_DEFECT = 0.25
@@ -466,6 +468,8 @@ class RunAwayAgent(AStarAgent):
         self._previous_enemy_pos = None
         self._previous_pig_pos = None
         self._chasing_pig = True
+        self._previous_enemy_def = None
+        self._previous_pig_def = None
         #print '[DEBUG] ME: {}'.format(self.me['name'])
         #print '[DEBUG] ENEMY: {}'.format(self.enemy['name'])
 
@@ -493,39 +497,6 @@ class RunAwayAgent(AStarAgent):
     def matches(self, a, b):
         return a == b
 
-    def find_shortest_path(self, start, end, **kwargs):
-        came_from, cost_so_far = {}, {}
-        explorer = []
-        heapify(explorer)
-
-        heappush(explorer, (0, start))
-        came_from[start] = None
-        cost_so_far[start] = 0
-        current = None
-
-        while len(explorer) > 0:
-            _, current = heappop(explorer)
-
-            if self.matches(current, end):
-                break
-
-            for nb in self.neighbors(current, **kwargs):
-                cost = self.move_cost()
-                new_cost = cost_so_far[current] + cost
-
-                if nb not in cost_so_far or new_cost < cost_so_far[nb]:
-                    cost_so_far[nb] = new_cost
-                    priority = new_cost + self.heuristic(end, nb, **kwargs)
-                    heappush(explorer, (priority, nb))
-                    came_from[nb] = current
-
-        # build path:
-        path = deque()
-        while current is not start:
-            path.appendleft(current)
-            current = came_from[current]
-        return path, cost_so_far
-
     # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
     def yaw_to_direction(self, yaw):
         return ((((yaw - 45) % 360) // 90) - 1) % 4;
@@ -537,8 +508,8 @@ class RunAwayAgent(AStarAgent):
         return not self._previous_enemy_pos == self.enemy['position']
 
     def enemy_chasing_pig(self, world):
-        past_path, past_cost = self._find_shortest_path(self._previous_enemy_pos, self.pig['position'], state=world)
-        path, cost = self._find_shortest_path(self.enemy['position'], self.pig['position'], state=world)
+        past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self.pig_def, state=world)
+        path, cost = self._find_shortest_path(self.enemy_def, self.pig_def, state=world)
         #print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
 
         if len(path) > len(past_path):
@@ -549,7 +520,7 @@ class RunAwayAgent(AStarAgent):
     def get_action_list(self, path):
         self._action_list = []
         for point in path:
-            self._action_list.append(point[3])
+            self._action_list.append(point.action)
 
     def act(self, obs, reward, done, is_training=False):
         if done:
@@ -557,7 +528,11 @@ class RunAwayAgent(AStarAgent):
            self._chasing_pig = True
            self._previous_pig_pos = None
            self._previous_enemy_pos = None
+           self._previous_enemy_def = None
+           self._previous_pig_def = None
 
+        if obs is None:
+            return random.choice(RunAwayAgent.ACTIONS)
         # Get current world state
         world = obs[0]
         entities = obs[1]
@@ -580,6 +555,9 @@ class RunAwayAgent(AStarAgent):
         # Get pig position
         self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
+        self.me_def = QLearnLowAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+        self.pig_def = QLearnLowAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
+        self.enemy_def = QLearnLowAgent.Neighbour(1, self.enemy['position'][0], self.enemy['position'][1], self.enemy['position'][2], "")
         #print '[DEBUG] My Position: {}'.format(self.me['position'])
         #print '[DEBUG] Enemy Position: {}'.format(self.enemy['position'])
         #print '[DEBUG] Pig Position: {}'.format(self.pig['position'])
@@ -588,7 +566,7 @@ class RunAwayAgent(AStarAgent):
         if self._previous_enemy_pos == None:
             #print '[DEBUG] First Round: Go for the Pig'
             self._chasing_pig = True
-            path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+            path, cost = self._find_shortest_path(self.me_def, self.pig_def, state=world)
             self.get_action_list(path)
         else:
             # It's not the first round
@@ -598,16 +576,16 @@ class RunAwayAgent(AStarAgent):
                     if self.enemy_chasing_pig(world):
                         #print '[DEBUG] Enemy chasing pig'
                         if not self._chasing_pig:
-                            path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+                            path, cost = self._find_shortest_path(self.me_def, self.pig_def, state=world)
                             self.get_action_list(path)
                         self._chasing_pig = True
                     else:
                         #print '[DEBUG] Enemy running away'
                         if self._chasing_pig:
-                            right_hole = (1, 4, 0)
-                            left_hole = (7, 4, 0)
-                            path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
-                            path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
+                            right_hole = QLearnLowAgent.Neighbour(1, 7, 4, 0, "")
+                            left_hole = QLearnLowAgent.Neighbour(1, 1, 4, 0, "")
+                            path_to_right, cost_to_right = self._find_shortest_path(self.me_def, right_hole, state=world)
+                            path_to_left, cost_to_left = self._find_shortest_path(self.me_def, left_hole, state=world)
 
                             #print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
@@ -618,22 +596,22 @@ class RunAwayAgent(AStarAgent):
                         self._chasing_pig = False
             else:
                 #print '[DEBUG] Pig moved: ',
-                past_path, past_cost = self.find_shortest_path(self._previous_enemy_pos, self._previous_pig_pos, state=world)
-                path, cost = self.find_shortest_path(self.enemy['position'], self._previous_pig_pos, state=world)
+                past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self._previous_pig_def, state=world)
+                path, cost = self._find_shortest_path(self.enemy_def, self._previous_pig_def, state=world)
 
                 if len(past_path) > len(path):
                     #print 'Enemy was chasing pig'
                     if not self._chasing_pig:
-                        path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+                        path, cost = self._find_shortest_path(self.me_def, self.pig_def, state=world)
                         self.get_action_list(path)
                     self._chasing_pig = True
                 else:
                     #print 'Enemy was running'
                     if self._chasing_pig:
-                        right_hole = (1, 4, 0)
-                        left_hole = (7, 4, 0)
-                        path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
-                        path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
+                        right_hole = QLearnLowAgent.Neighbour(1, 7, 4, 0, "")
+                        left_hole = QLearnLowAgent.Neighbour(1, 1, 4, 0, "")
+                        path_to_right, cost_to_right = self._find_shortest_path(self.me_def, right_hole, state=world)
+                        path_to_left, cost_to_left = self._find_shortest_path(self.me_def, left_hole, state=world)
 
                         #print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
 
@@ -645,6 +623,8 @@ class RunAwayAgent(AStarAgent):
 
         self._previous_pig_pos = self.pig['position']
         self._previous_enemy_pos = self.enemy['position']
+        self._previous_enemy_def = self.enemy_def
+        self._previous_pig_def = self.pig_def
 
         #print ''
 
@@ -654,45 +634,59 @@ class RunAwayAgent(AStarAgent):
 
         return RunAwayAgent.ACTIONS.index('turn 1')
 
+
     def neighbors(self, pos, state=None):
         state_width = state.shape[1]
         state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in QLearnHighAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(
+                    QLearnHighAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(
+                    QLearnHighAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
+                                           pos.direction, action))
+            if action == "movenorth":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
+            elif action == "moveeast":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
+            elif action == "movesouth":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
+            elif action == "movewest":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
 
-        nb = []
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
 
-        nb.append( (pos[0], pos[1], (pos[2] + 1)%4, "turn 1"))
-        if pos[2] > 0:
-            nb.append( (pos[0], pos[1], pos[2] - 1, "turn -1") )
-        else:
-            nb.append( (pos[0], pos[1], 3, "turn -1"))
 
-        if pos[2] == 0 and 'sand' not in state[pos[0] + 1][pos[1]]:
-            nb.append( (pos[0] + 1, pos[1], pos[2], "move 1") )
-        elif pos[2] == 1 and 'sand' not in state[pos[0]][pos[1] + 1]:
-            nb.append( (pos[0], pos[1] + 1, pos[2], "move 1") )
-        elif pos[2] == 2 and 'sand' not in state[pos[0] - 1][pos[1]]:
-            nb.append( (pos[0] - 1, pos[1], pos[2], "move 1") )
-        elif pos[2] == 3 and 'sand' not in state[pos[0]][pos[1] - 1]:
-            nb.append( (pos[0], pos[1] - 1, pos[2], "move 1") )
-
-        return nb
 
     def heuristic(self, a, b, state=None):
         (x1, y1) = (a[0], a[1])
         (x2, y2) = (b[0], b[1])
         return abs(x1 - x2) + abs(y1 - y2)
 
-class QLearnHighAgent(AStarAgent):
+class QLearnLowAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
     def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
-        super(QLearnHighAgent, self).__init__(name, len(QLearnHighAgent.ACTIONS),
+        super(QLearnLowAgent, self).__init__(name, len(QLearnLowAgent.ACTIONS),
                                            visualizer = visualizer)
         self.me = {'name': self.name}
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
         self.Q = dict()
+        self.Q = np.load('Q.npy').item()
         self.alpha = alpha
         self.gamma = gamma
         self.eps = eps
@@ -708,7 +702,7 @@ class QLearnHighAgent(AStarAgent):
 
         actions = []
         for nb in self.neighbors(self.agent_def,state=new_state[0]):
-            actions.append(QLearnHighAgent.ACTIONS.index(nb.action))
+            actions.append(QLearnLowAgent.ACTIONS.index(nb.action))
 
         maximum = -25
         max_action = 0
@@ -753,7 +747,7 @@ class QLearnHighAgent(AStarAgent):
         self.pig['position'] = \
             [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
-        self.agent_def = QLearnHighAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+        self.agent_def = QLearnLowAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
 
         return tuple((self.me['position'], self.enemy['position'], self.pig['position']))
 
@@ -767,7 +761,7 @@ class QLearnHighAgent(AStarAgent):
 
         actions = []
         for nb in self.neighbors(self.agent_def,state=state[0]):
-            actions.append(QLearnAgent.ACTIONS.index(nb.action))
+            actions.append(QLearnLowAgent.ACTIONS.index(nb.action))
 
         if random.random() < self.eps:
         	return random.choice(actions)
@@ -797,24 +791,24 @@ class QLearnHighAgent(AStarAgent):
         inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
         inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
         # add a neighbour for each potential action; prune out the disallowed states afterwards
-        for action in QLearnHighAgent.ACTIONS:
+        for action in QLearnLowAgent.ACTIONS:
             if action.startswith("turn"):
                 neighbors.append(
-                    QLearnHighAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+                    QLearnLowAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
             if action.startswith("move "):  # note the space to distinguish from movemnorth etc
                 sign = int(action.split(' ')[1])
                 weight = 1 if sign == 1 else 1.5
                 neighbors.append(
-                    QLearnHighAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
+                    QLearnLowAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
                                            pos.direction, action))
             if action == "movenorth":
-                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
+                neighbors.append(QLearnLowAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
             elif action == "moveeast":
-                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
+                neighbors.append(QLearnLowAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
             elif action == "movesouth":
-                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
+                neighbors.append(QLearnLowAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
             elif action == "movewest":
-                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
+                neighbors.append(QLearnLowAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
 
         # now prune:
         valid_neighbours = [n for n in neighbors if
@@ -836,12 +830,12 @@ class QLearnHighAgent(AStarAgent):
 
 State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
 
-class QLearnLowAgent(AStarAgent):
+class QLearnHighAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
     def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
-        super(QLearnLowAgent, self).__init__(name, len(QLearnLowAgent.ACTIONS),visualizer = visualizer)
+        super(QLearnHighAgent, self).__init__(name, len(QLearnHighAgent.ACTIONS),visualizer = visualizer)
         self.me = { 'name': str(name) }
         self.enemy = { 'name': str(enemy) }
         self.pig = { 'name': str(target) }
@@ -852,8 +846,8 @@ class QLearnLowAgent(AStarAgent):
         self._previous_enemy_def = None
         self._previous_pig_def = None
 
-        self.right_hole = QLearnLowAgent.Neighbour(1, 7, 4, 0, "")
-        self.left_hole = QLearnLowAgent.Neighbour(1, 1, 4, 0, "")
+        self.right_hole = QLearnHighAgent.Neighbour(1, 7, 4, 0, "")
+        self.left_hole = QLearnHighAgent.Neighbour(1, 1, 4, 0, "")
 
         self.Q = np.load('Q.npy').item()
 
@@ -894,9 +888,9 @@ class QLearnLowAgent(AStarAgent):
         else:
             self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
-        self.me_def = QLearnLowAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
-        self.pig_def = QLearnLowAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
-        self.enemy_def = QLearnLowAgent.Neighbour(1, self.enemy['position'][0], self.enemy['position'][1], self.enemy['position'][2], "")
+        self.me_def = QLearnHighAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+        self.pig_def = QLearnHighAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
+        self.enemy_def = QLearnHighAgent.Neighbour(1, self.enemy['position'][0], self.enemy['position'][1], self.enemy['position'][2], "")
 
         if self._previous_enemy_pos == None:
             enemy_action = True
@@ -1000,7 +994,7 @@ class QLearnLowAgent(AStarAgent):
         m = 0
         len_path = 100
         if obs == None:
-            return QLearnLowAgent.ACTIONS.index('turn 1'), m, len_path
+            return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
 
         # Get current world state
         world = obs[0]
@@ -1050,9 +1044,9 @@ class QLearnLowAgent(AStarAgent):
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
-            return QLearnLowAgent.ACTIONS.index(action), m, len_path
+            return QLearnHighAgent.ACTIONS.index(action), m, len_path
 
-        return QLearnLowAgent.ACTIONS.index('turn 1'), m, len_path
+        return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
 
     def neighbors(self, pos, state=None):
         state_width = state.shape[1]
