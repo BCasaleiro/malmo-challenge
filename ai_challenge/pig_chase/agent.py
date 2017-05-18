@@ -37,7 +37,7 @@ from collections import deque
 
 P_FOCUSED = .75
 CELL_WIDTH = 33
-DEBUG = 0
+DEBUG = 1
 
 class PigChaseQLearnerAgent(QLearnerAgent):
     """A thin wrapper around QLearnerAgent that normalizes rewards to [-1,1]"""
@@ -419,14 +419,15 @@ class QLearnAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
-    def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
+    def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
         super(QLearnAgent, self).__init__(name, len(QLearnAgent.ACTIONS),
                                            visualizer = visualizer)
         self.me = {'name': self.name}
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
-        self.Q = np.load('Q.npy').item()
+        self.Q = dict()
         self.alpha = alpha
+        self.gamma = gamma
         self.eps = eps
         print "Im here"
 
@@ -445,10 +446,9 @@ class QLearnAgent(AStarAgent):
 
         maximum = -25
         max_action = 0
-        if DEBUG: print "[UpdateQ]-Actions:", actions
+
         for i in range(len(actions)):
             q_temp = q_next + tuple((actions[i],))
-            if DEBUG: print "[UpdateQ]-Q.temp:", q_temp
             if q_temp in self.Q.keys():
                 if self.Q[q_temp] > maximum:
                     maximum = self.Q[q_temp]
@@ -459,7 +459,7 @@ class QLearnAgent(AStarAgent):
         else:
             q_next = q_next + tuple((max_action,))
 
-        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.eps*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
+        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.gamma*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
         if DEBUG: print "[UpdateQ]-Q[x]=", self.Q[q_prev]
 
         #np.save('Q.npy', self.Q)
@@ -500,36 +500,36 @@ class QLearnAgent(AStarAgent):
     def act(self, state, reward, done, is_training=False):
 
         if state is None:
-            return np.random.randint(0, self.nb_actions)
+			if DEBUG: print "State is None"
+			return np.random.randint(0, self.nb_actions)
 
         q = self.get_key(state)
-
 
         actions = []
         for nb in self.neighbors(self.agent_def,state=state[0]):
             actions.append(QLearnAgent.ACTIONS.index(nb.action))
 
+        if random.random() < self.eps:
+        	return random.choice(actions)
+
         maximum = -25
         max_action = 0
 
-        if DEBUG: print len(self.Q.keys())
-        if DEBUG: print "[ACT]-Q:",self.Q
-        if DEBUG: print "[ACT]-Actions:",actions
 
         for i in range(len(actions)):
             q_temp = q + tuple((actions[i],))
-
-            if DEBUG: print "[ACT]-Q.temp", q_temp
-
             if q_temp in self.Q.keys():
+            	if DEBUG: print "[ACT]", q_temp, self.Q[q_temp]
                 if self.Q[q_temp] > maximum:
                     maximum = self.Q[q_temp]
                     max_action = actions[i]
 
 
         if(maximum == -25):
-            return random.choice(actions)
+			if DEBUG: print "Random Choice"
+			return random.choice(actions)
 
+        print "Max action:", max_action
         return max_action
 
     def neighbors(self, pos, state=None):

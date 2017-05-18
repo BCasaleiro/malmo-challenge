@@ -76,7 +76,7 @@ def agent_factory(name, role, kind, clients, max_episodes, max_actions, logdir, 
                 else:
                     agent_type = PigChaseEnvironment.AGENT_TYPE_2
                 obs = env.reset(agent_type)
-
+                
             # take a step
             obs, reward, done = env.do(action)
             rewards.append(reward)
