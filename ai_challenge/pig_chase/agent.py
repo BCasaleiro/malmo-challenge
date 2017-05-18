@@ -32,11 +32,13 @@ from malmopy.agent import AStarAgent
 from malmopy.agent import QLearnerAgent, BaseAgent, RandomAgent
 from malmopy.agent.gui import GuiAgent
 
-P_FOCUSED = .75
+P_FOCUSED = .5
+P_RANDOM,  = 0.25
+P_DEFECT = 0.25
 CELL_WIDTH = 33
 
 State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
-	
+
 class PigChaseQLearnerAgent(QLearnerAgent):
     """A thin wrapper around QLearnerAgent that normalizes rewards to [-1,1]"""
 
@@ -62,11 +64,11 @@ class PigChaseChallengeAgent(BaseAgent):
                                          visualizer = visualizer))
         self._agents.append(RandomAgent(name, nb_actions,
                                         visualizer = visualizer))
+        self._agents.append(DefectAgent(name, visualizer = visualizer))
         self.current_agent = self._select_agent(P_FOCUSED)
 
     def _select_agent(self, p_focused):
-        return self._agents[np.random.choice(range(len(self._agents)),
-                                             p = [p_focused, 1. - p_focused])]
+        return self._agents[np.random.choice(range(len(self._agents)), p = [P_FOCUSED, P_RANDOM, P_DEFECT])]
 
     def act(self, new_state, reward, done, is_training=False):
         if done:
