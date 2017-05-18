@@ -453,10 +453,10 @@ class PigChaseHumanAgent(GuiAgent):
 State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
 
 class QLearnerAgent(AStarAgent):
-    ACTIONS = ENV_ACTIONS    
+    ACTIONS = ENV_ACTIONS
     Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
 
-    def __init__(self, name, enemy, target, alpha, eps, visualizer = None):
+    def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
         super(QLearnerAgent, self).__init__(name, len(QLearnerAgent.ACTIONS),visualizer = visualizer)
         self.me = { 'name': str(name) }
         self.enemy = { 'name': str(enemy) }
@@ -471,11 +471,12 @@ class QLearnerAgent(AStarAgent):
         self.right_hole = QLearnerAgent.Neighbour(1, 7, 4, 0, "")
         self.left_hole = QLearnerAgent.Neighbour(1, 1, 4, 0, "")
 
-        
+
         self.Q = np.load('Q.npy').item()
         #print self.Q
         print len(self.Q.keys())
         self.alpha = float(alpha)
+        self.gamma = float(gamma)
         self.eps = float(eps)
 
     def matches(self, a, b):
@@ -640,7 +641,7 @@ class QLearnerAgent(AStarAgent):
                 maximum = self.Q[S]
                 m = i
 
-        if maximum == -25:
+        if maximum == -25 or random.random() < self.eps:
             m = random.choice(A)
 
         if m == 0: # Defect

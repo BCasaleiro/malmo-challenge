@@ -90,7 +90,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
         elif baseline_agent == 'qlearner':
-            agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.4, 0.9)
+            agent = QLearnerAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
         else:
             agent = RandomAgent(name, env.available_actions)
 
