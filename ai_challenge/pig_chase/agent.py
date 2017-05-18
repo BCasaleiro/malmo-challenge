@@ -31,7 +31,9 @@ from malmopy.agent import AStarAgent
 from malmopy.agent import QLearnerAgent, BaseAgent, RandomAgent
 from malmopy.agent.gui import GuiAgent
 
-P_FOCUSED = .75
+P_FOCUSED = .5
+P_RANDOM  = 0.25
+P_DEFECT = 0.25
 CELL_WIDTH = 33
 
 
@@ -60,11 +62,11 @@ class PigChaseChallengeAgent(BaseAgent):
                                          visualizer = visualizer))
         self._agents.append(RandomAgent(name, nb_actions,
                                         visualizer = visualizer))
+         self._agents.append(DefectAgent(name, visualizer = visualizer))
         self.current_agent = self._select_agent(P_FOCUSED)
 
     def _select_agent(self, p_focused):
-        return self._agents[np.random.choice(range(len(self._agents)),
-                                             p = [p_focused, 1. - p_focused])]
+        return self._agents[np.random.choice(range(len(self._agents)), p = [P_FOCUSED, P_RANDOM, P_DEFECT])]
 
     def act(self, new_state, reward, done, is_training=False):
         if done:
@@ -79,7 +81,6 @@ class PigChaseChallengeAgent(BaseAgent):
 
     def inject_summaries(self, idx):
         self.current_agent.inject_summaries(idx)
-
 
 class FocusedAgent(AStarAgent):
     ACTIONS = ENV_ACTIONS
@@ -448,3 +449,632 @@ class PigChaseHumanAgent(GuiAgent):
         self._quit_event.set()
         self._root.quit()
         sys.exit()
+
+
+class RunAwayAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+
+    def __init__(self, name, enemy, target, visualizer = None):
+        super(RunAwayAgent, self).__init__(name, len(RunAwayAgent.ACTIONS),visualizer = visualizer)
+        self._action_list = []
+        self.me = {'name': self.name}
+        self.enemy = {'name': str(enemy)}
+        self.pig = {'name': str(target)}
+        self._previous_enemy_pos = None
+        self._previous_pig_pos = None
+        self._chasing_pig = True
+        print '[DEBUG] ME: {}'.format(self.me['name'])
+        print '[DEBUG] ENEMY: {}'.format(self.enemy['name'])
+
+    def print_map(self, world):
+        print 'World shape: {}'.format(world.shape)
+        for l in world:
+            for c in l:
+                if 'Agent_1' in c:
+                    print 'E',
+                elif 'Agent_2' in c:
+                    print 'S',
+                elif 'Pig' in c:
+                    print 'P',
+                elif 'sand' in c:
+                    print 'X',
+                elif 'lapis_block' in c:
+                    print 'L',
+                else:
+                    print 'O',
+            print ''
+
+    def move_cost(self):
+        return 1
+
+    def matches(self, a, b):
+        return a == b
+
+    def find_shortest_path(self, start, end, **kwargs):
+        came_from, cost_so_far = {}, {}
+        explorer = []
+        heapify(explorer)
+
+        heappush(explorer, (0, start))
+        came_from[start] = None
+        cost_so_far[start] = 0
+        current = None
+
+        while len(explorer) > 0:
+            _, current = heappop(explorer)
+
+            if self.matches(current, end):
+                break
+
+            for nb in self.neighbors(current, **kwargs):
+                cost = self.move_cost()
+                new_cost = cost_so_far[current] + cost
+
+                if nb not in cost_so_far or new_cost < cost_so_far[nb]:
+                    cost_so_far[nb] = new_cost
+                    priority = new_cost + self.heuristic(end, nb, **kwargs)
+                    heappush(explorer, (priority, nb))
+                    came_from[nb] = current
+
+        # build path:
+        path = deque()
+        while current is not start:
+            path.appendleft(current)
+            current = came_from[current]
+        return path, cost_so_far
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
+
+    def pig_moved(self):
+        return not self._previous_pig_pos == self.pig['position']
+
+    def enemy_moved(self):
+        return not self._previous_enemy_pos == self.enemy['position']
+
+    def enemy_chasing_pig(self, world):
+        past_path, past_cost = self._find_shortest_path(self._previous_enemy_pos, self.pig['position'], state=world)
+        path, cost = self._find_shortest_path(self.enemy['position'], self.pig['position'], state=world)
+        print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
+
+        if len(path) > len(past_path):
+            return False
+        else:
+            return True
+
+    def get_action_list(self, path):
+        self._action_list = []
+        for point in path:
+            self._action_list.append(point[3])
+
+    def act(self, obs, reward, done, is_training=False):
+        if done:
+           self._action_list = []
+           self._chasing_pig = True
+           self._previous_pig_pos = None
+           self._previous_enemy_pos = None
+
+        # Get current world state
+        world = obs[0]
+        entities = obs[1]
+
+        self.print_map(world)
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction( int(entitie[u'yaw']) )
+            elif entitie[u'name'] == self.enemy['name']:
+                dir_enemy = self.yaw_to_direction( int(entitie[u'yaw']) )
+
+        # Get my position
+        self.me['position'] = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+
+        # Get enemy position
+        self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
+
+        # Get pig position
+        self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+
+        print '[DEBUG] My Position: {}'.format(self.me['position'])
+        print '[DEBUG] Enemy Position: {}'.format(self.enemy['position'])
+        print '[DEBUG] Pig Position: {}'.format(self.pig['position'])
+
+        #It's the first round -> Go for the pig
+        if self._previous_enemy_pos == None:
+            print '[DEBUG] First Round: Go for the Pig'
+            self._chasing_pig = True
+            path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+            self.get_action_list(path)
+        else:
+            # It's not the first round
+            if not self.pig_moved():
+                print '[DEBUG] Pig did not move'
+                if self.enemy_moved():
+                    if self.enemy_chasing_pig(world):
+                        print '[DEBUG] Enemy chasing pig'
+                        if not self._chasing_pig:
+                            path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+                            self.get_action_list(path)
+                        self._chasing_pig = True
+                    else:
+                        print '[DEBUG] Enemy running away'
+                        if self._chasing_pig:
+                            right_hole = (1, 4, 0)
+                            left_hole = (7, 4, 0)
+                            path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
+                            path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
+
+                            print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+
+                            if len(path_to_right) > len(path_to_left):
+                                self.get_action_list(path_to_left)
+                            else:
+                                self.get_action_list(path_to_right)
+                        self._chasing_pig = False
+            else:
+                print '[DEBUG] Pig moved: ',
+                past_path, past_cost = self.find_shortest_path(self._previous_enemy_pos, self._previous_pig_pos, state=world)
+                path, cost = self.find_shortest_path(self.enemy['position'], self._previous_pig_pos, state=world)
+
+                if len(past_path) > len(path):
+                    print 'Enemy was chasing pig'
+                    if not self._chasing_pig:
+                        path, cost = self.find_shortest_path(self.me['position'], self.pig['position'], state=world)
+                        self.get_action_list(path)
+                    self._chasing_pig = True
+                else:
+                    print 'Enemy was running'
+                    if self._chasing_pig:
+                        right_hole = (1, 4, 0)
+                        left_hole = (7, 4, 0)
+                        path_to_right, cost_to_right = self._find_shortest_path(self.me['position'], right_hole, state=world)
+                        path_to_left, cost_to_left = self._find_shortest_path(self.me['position'], left_hole, state=world)
+
+                        print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+
+                        if len(path_to_right) > len(path_to_left):
+                            self.get_action_list(path_to_left)
+                        else:
+                            self.get_action_list(path_to_right)
+                    self._chasing_pig = False
+
+        self._previous_pig_pos = self.pig['position']
+        self._previous_enemy_pos = self.enemy['position']
+
+        print ''
+
+        if self._action_list is not None and len(self._action_list) > 0:
+            action = self._action_list.pop(0)
+            return RunAwayAgent.ACTIONS.index(action)
+
+        return RunAwayAgent.ACTIONS.index('turn 1')
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+
+        nb = []
+
+        nb.append( (pos[0], pos[1], (pos[2] + 1)%4, "turn 1"))
+        if pos[2] > 0:
+            nb.append( (pos[0], pos[1], pos[2] - 1, "turn -1") )
+        else:
+            nb.append( (pos[0], pos[1], 3, "turn -1"))
+
+        if pos[2] == 0 and 'sand' not in state[pos[0] + 1][pos[1]]:
+            nb.append( (pos[0] + 1, pos[1], pos[2], "move 1") )
+        elif pos[2] == 1 and 'sand' not in state[pos[0]][pos[1] + 1]:
+            nb.append( (pos[0], pos[1] + 1, pos[2], "move 1") )
+        elif pos[2] == 2 and 'sand' not in state[pos[0] - 1][pos[1]]:
+            nb.append( (pos[0] - 1, pos[1], pos[2], "move 1") )
+        elif pos[2] == 3 and 'sand' not in state[pos[0]][pos[1] - 1]:
+            nb.append( (pos[0], pos[1] - 1, pos[2], "move 1") )
+
+        return nb
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a[0], a[1])
+        (x2, y2) = (b[0], b[1])
+        return abs(x1 - x2) + abs(y1 - y2)
+
+class QLearnHighAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+    Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
+
+    def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
+        super(QLearnHighAgent, self).__init__(name, len(QLearnHighAgent.ACTIONS),
+                                           visualizer = visualizer)
+        self.me = {'name': self.name}
+        self.enemy = {'name': str(enemy)}
+        self.pig = {'name': str(target)}
+        self.Q = dict()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.eps = eps
+
+
+    def updateQ(self, state, action, new_state, reward):
+        if(state is None or new_state is None):
+            return
+        q_prev = self.get_key(state)
+        q_prev = q_prev + tuple((action,))
+
+        q_next = self.get_key(new_state)
+
+        actions = []
+        for nb in self.neighbors(self.agent_def,state=new_state[0]):
+            actions.append(QLearnHighAgent.ACTIONS.index(nb.action))
+
+        maximum = -25
+        max_action = 0
+
+        for i in range(len(actions)):
+            q_temp = q_next + tuple((actions[i],))
+            if q_temp in self.Q.keys():
+                if self.Q[q_temp] > maximum:
+                    maximum = self.Q[q_temp]
+                    max_action = actions[i]
+
+        if(maximum == -25):
+            q_next = q_next + tuple((random.choice(actions),))
+        else:
+            q_next = q_next + tuple((max_action,))
+
+        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (reward + self.gamma*self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
+
+    def get_key(self, state):
+        # Get current world state
+        world = state[0]
+        entities = state[1]
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction(int(entitie[u'yaw']))
+            elif entitie[u'name'] == self.enemy['name']:
+                dir_enemy = self.yaw_to_direction(int(entitie[u'yaw']))
+
+        # Get my position
+        self.me['position'] = \
+            [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+
+        temp_enemy = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k]
+        # Get enemy position
+        if len(temp_enemy)>0 :
+            self.enemy['position'] = temp_enemy[0]
+        else:
+            self.enemy['position'] = tuple((-1, -1, 1))
+        # Get pig position
+        self.pig['position'] = \
+            [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+
+        self.agent_def = QLearnHighAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+
+        return tuple((self.me['position'], self.enemy['position'], self.pig['position']))
+
+
+    def act(self, state, reward, done, is_training=False):
+
+        if state is None:
+			return np.random.randint(0, self.nb_actions)
+
+        q = self.get_key(state)
+
+        actions = []
+        for nb in self.neighbors(self.agent_def,state=state[0]):
+            actions.append(QLearnAgent.ACTIONS.index(nb.action))
+
+        if random.random() < self.eps:
+        	return random.choice(actions)
+
+        maximum = -25
+        max_action = 0
+
+        for i in range(len(actions)):
+            q_temp = q + tuple((actions[i],))
+            if q_temp in self.Q.keys():
+            	if self.Q[q_temp] > maximum:
+                    maximum = self.Q[q_temp]
+                    max_action = actions[i]
+
+
+        if(maximum == -25):
+			return random.choice(actions)
+
+        print "Max action:", max_action
+        return max_action
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in QLearnHighAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(
+                    QLearnHighAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(
+                    QLearnHighAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),
+                                           pos.direction, action))
+            if action == "movenorth":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z - 1, pos.direction, action))
+            elif action == "moveeast":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x + 1, pos.z, pos.direction, action))
+            elif action == "movesouth":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x, pos.z + 1, pos.direction, action))
+            elif action == "movewest":
+                neighbors.append(QLearnHighAgent.Neighbour(1, pos.x - 1, pos.z, pos.direction, action))
+
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
+
+State = namedtuple('State', ['Xs', 'Xe', 'Xp', 'Ae'])
+
+class QLearnLowAgent(AStarAgent):
+    ACTIONS = ENV_ACTIONS
+    Neighbour = namedtuple('Neighbour', ['cost', 'x', 'z', 'direction', 'action'])
+
+    def __init__(self, name, enemy, target, alpha, gamma, eps, visualizer = None):
+        super(QLearnLowAgent, self).__init__(name, len(QLearnLowAgent.ACTIONS),visualizer = visualizer)
+        self.me = { 'name': str(name) }
+        self.enemy = { 'name': str(enemy) }
+        self.pig = { 'name': str(target) }
+        self._action_list = []
+
+        self._previous_enemy_pos = None
+        self._previous_pig_pos = None
+        self._previous_enemy_def = None
+        self._previous_pig_def = None
+
+        self.right_hole = QLearnLowAgent.Neighbour(1, 7, 4, 0, "")
+        self.left_hole = QLearnLowAgent.Neighbour(1, 1, 4, 0, "")
+
+        self.Q = np.load('Q.npy').item()
+
+        self.alpha = float(alpha)
+        self.gamma = float(gamma)
+        self.eps = float(eps)
+
+    def matches(self, a, b):
+        return a.x == b.x and a.z == b.z  # don't worry about dir and action
+
+    def get_key(self, obs):
+        # Get current world state
+        world = obs[0]
+        entities = obs[1]
+
+        # Get my direction and enemy's direction
+        for entitie in entities:
+            if entitie[u'name'] == self.me['name']:
+                dir_me = self.yaw_to_direction( int(entitie[u'yaw']) )
+            elif entitie[u'name'] == self.enemy['name']:
+                dir_enemy = self.yaw_to_direction( int(entitie[u'yaw']) )
+
+        # Get my position
+        self.me['position'] = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+
+        # Get enemy position
+        aux_l = len([(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k])
+
+        if aux_l == 0:
+            self.enemy['position'] = (-1, -1, 1)
+        else:
+            self.enemy['position'] = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k][0]
+
+        # Get pig position
+        aux_l = len([(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k])
+        if aux_l == 0:
+            self.pig['position'] = (-2, -2, 1)
+        else:
+            self.pig['position'] = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+
+        self.me_def = QLearnLowAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
+        self.pig_def = QLearnLowAgent.Neighbour(1, self.pig['position'][0], self.pig['position'][1], self.pig['position'][2], "")
+        self.enemy_def = QLearnLowAgent.Neighbour(1, self.enemy['position'][0], self.enemy['position'][1], self.enemy['position'][2], "")
+
+        if self._previous_enemy_pos == None:
+            enemy_action = True
+        else:
+            enemy_action = self.enemy_chasing_pig(world)
+
+        return State( (self.me['position'][0], self.me['position'][1]),(self.enemy['position'][0], self.enemy['position'][1]),(self.pig['position'][0], self.pig['position'][1]),enemy_action )
+
+    def updateQ(self, obs, action, new_obs, reward, intention, len_path):
+
+        if obs == None or new_obs == None:
+            return
+
+        aux = self.get_key(obs)
+        q_prev = ( aux, action )
+
+        aux = self.get_key(new_obs)
+
+        # Defect or Cooperate
+        A = [0, 1]
+
+        maximum = -25
+        m = 0
+        for i, a in enumerate(A):
+            S = (aux, a)
+            if S in self.Q.keys() and self.Q[S] > maximum:
+                maximum = self.Q[S]
+                m = i
+
+        if maximum == -25:
+            m = random.choice(A)
+
+        q_next = (aux, m)
+
+        if intention == 0:
+            rew = ( len_path * (-1) ) + 5
+        else:
+            rew = ( len_path * (-1) ) + 25
+
+        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (rew + self.eps * (self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0)))
+
+    def print_map(self, world):
+        print 'World shape: {}'.format(world.shape)
+        for l in world:
+            for c in l:
+                if 'Agent_1' in c:
+                    print 'E',
+                elif 'Agent_2' in c:
+                    print 'S',
+                elif 'Pig' in c:
+                    print 'P',
+                elif 'sand' in c:
+                    print 'X',
+                elif 'lapis_block' in c:
+                    print 'L',
+                else:
+                    print 'O',
+            print ''
+
+    # convert Minecraft yaw to: 0 = north; 1 = east; 2 = south; 3 = west
+    def yaw_to_direction(self, yaw):
+        return ((((yaw - 45) % 360) // 90) - 1) % 4;
+
+    def get_action_list(self, path):
+        self._action_list = []
+        for point in path:
+            self._action_list.append(point.action)
+
+    def pig_moved(self):
+        return not ( (self._previous_pig_pos[0] == self.pig['position'][0]) and (self._previous_pig_pos[1] == self.pig['position'][1]) )
+
+    def enemy_chasing_pig(self, world):
+        if self.pig_moved():
+            past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self._previous_pig_def, state=world)
+            path, cost = self._find_shortest_path(self.enemy_def, self._previous_pig_def, state=world)
+        else:
+            past_path, past_cost = self._find_shortest_path(self._previous_enemy_def, self.pig_def, state=world)
+            path, cost = self._find_shortest_path(self.enemy_def, self.pig_def, state=world)
+
+        # print 'Enemy Distance from pig: {} {}'.format(len(past_path), len(path))
+
+        if len(path) > len(past_path):
+            return False
+        else:
+            return True
+
+    def get_action_list(self, path):
+        self._action_list = []
+        for point in path:
+            self._action_list.append(point.action)
+
+    def act(self, obs, reward, done, is_training=False):
+        if done:
+           self._action_list = []
+           self._chasing_pig = True
+           self._previous_pig_pos = None
+           self._previous_enemy_pos = None
+           self._previous_pig_def = None
+           self._previous_enemy_def = None
+
+        m = 0
+        len_path = 100
+        if obs == None:
+            return QLearnLowAgent.ACTIONS.index('turn 1'), m, len_path
+
+        # Get current world state
+        world = obs[0]
+        entities = obs[1]
+
+        # self.print_map(world)
+
+        # 'Xs', 'Xe', 'Xp', 'Ae'
+        s = self.get_key(obs)
+
+        # Defect or Cooperate
+        A = [0, 1]
+
+        maximum = -25
+        m = 0
+
+        for i, a in enumerate(A):
+            S = (s, a)
+            if S in self.Q.keys() and self.Q[S] > maximum:
+                maximum = self.Q[S]
+                m = i
+
+        if maximum == -25 or random.random() < self.eps:
+            m = random.choice(A)
+
+        if m == 0: # Defect
+            path_to_right, cost_to_right = self._find_shortest_path(self.me_def, self.right_hole, state=world)
+            path_to_left, cost_to_left = self._find_shortest_path(self.me_def, self.left_hole, state=world)
+            # print 'Distance Left: Hole: {} Distance Right Hole: {}'.format(len(path_to_left), len(path_to_right))
+
+            if len(path_to_right) > len(path_to_left):
+                self.get_action_list(path_to_left)
+            else:
+                self.get_action_list(path_to_right)
+        else: #Cooperate
+            path, cost = self._find_shortest_path(self.me_def, self.pig_def, state=world)
+            self.get_action_list(path)
+
+        self._previous_pig_pos = self.pig['position']
+        self._previous_enemy_pos = self.enemy['position']
+        self._previous_pig_def = self.pig_def
+        self._previous_enemy_def = self.enemy_def
+
+        len_path = len(self._action_list)
+
+        # print ''
+
+        if self._action_list is not None and len(self._action_list) > 0:
+            action = self._action_list.pop(0)
+            return QLearnLowAgent.ACTIONS.index(action), m, len_path
+
+        return QLearnLowAgent.ACTIONS.index('turn 1'), m, len_path
+
+    def neighbors(self, pos, state=None):
+        state_width = state.shape[1]
+        state_height = state.shape[0]
+        dir_north, dir_east, dir_south, dir_west = range(4)
+        neighbors = []
+        inc_x = lambda x, dir, delta: x + delta if dir == dir_east else x - delta if dir == dir_west else x
+        inc_z = lambda z, dir, delta: z + delta if dir == dir_south else z - delta if dir == dir_north else z
+        # add a neighbour for each potential action; prune out the disallowed states afterwards
+        for action in FocusedAgent.ACTIONS:
+            if action.startswith("turn"):
+                neighbors.append(FocusedAgent.Neighbour(1, pos.x, pos.z, (pos.direction + int(action.split(' ')[1])) % 4, action))
+            if action.startswith("move "):  # note the space to distinguish from movemnorth etc
+                sign = int(action.split(' ')[1])
+                weight = 1 if sign == 1 else 1.5
+                neighbors.append(FocusedAgent.Neighbour(weight, inc_x(pos.x, pos.direction, sign), inc_z(pos.z, pos.direction, sign),pos.direction, action))
+
+        # now prune:
+        valid_neighbours = [n for n in neighbors if
+                            n.x >= 0 and n.x < state_width and n.z >= 0 and n.z < state_height and state[
+                                n.z, n.x] != 'sand']
+        return valid_neighbours
+
+    def heuristic(self, a, b, state=None):
+        (x1, y1) = (a.x, a.z)
+        (x2, y2) = (b.x, b.z)
+        return abs(x1 - x2) + abs(y1 - y2)
+        

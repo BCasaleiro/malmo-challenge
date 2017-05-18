@@ -88,6 +88,12 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
         if baseline_agent == 'astar':
             agent = FocusedAgent(name, ENV_TARGET_NAMES[0])
+        elif baseline_agent == 'runaway':
+            agent = RunAwayAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0])
+        elif baseline_agent == 'qlearnhigh':
+            agent = QLearnHighAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.5, 0.8, 0.05)
+        elif baseline_agent == 'qlearnlow':
+            agent = QLearnLowAgent(name, ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.5, 0.8, 0.05)
         else:
             agent = RandomAgent(name, env.available_actions)
 
@@ -109,7 +115,10 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
             # select an action
             action = agent.act(obs, reward, agent_done, is_training=True)
             # take a step
+            obs_prev = obs
             obs, reward, agent_done = env.do(action)
+            if(baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow'):
+                agent.updateQ(obs_prev, action, obs, reward)      
             viz_rewards.append(reward)
 
             agent.inject_summaries(step)
@@ -142,7 +151,7 @@ def run_experiment(agents_def):
 if __name__ == '__main__':
     arg_parser = ArgumentParser('Pig Chase baseline experiment')
     arg_parser.add_argument('-t', '--type', type=str, default='astar',
-                            choices=['astar', 'random'],
+                            choices=['astar', 'random', 'runaway', 'qlearnhigh', 'qlearnlow'],
                             help='The type of baseline to run.')
     arg_parser.add_argument('-e', '--epochs', type=int, default=5,
                             help='Number of epochs to run.')
