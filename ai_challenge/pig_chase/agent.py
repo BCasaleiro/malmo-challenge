@@ -103,7 +103,6 @@ class FocusedAgent(AStarAgent):
 
         if state is None:
             return np.random.randint(0, self.nb_actions)
-
         entities = state[1]
         state = state[0]
 
@@ -188,8 +187,8 @@ class DefectAgent(AStarAgent):
         self.me = { 'name': str(name) }
         self._action_list = []
 
-        self.right_hole = QLearnerAgent.Neighbour(1, 7, 4, 0, "")
-        self.left_hole = QLearnerAgent.Neighbour(1, 1, 4, 0, "")
+        self.right_hole = DefectAgent.Neighbour(1, 7, 4, 0, "")
+        self.left_hole = DefectAgent.Neighbour(1, 1, 4, 0, "")
 
     def matches(self, a, b):
         return a.x == b.x and a.z == b.z  # don't worry about dir and action
