@@ -33,7 +33,7 @@ from malmopy.agent import QLearnerAgent, BaseAgent, RandomAgent
 from malmopy.agent.gui import GuiAgent
 
 P_FOCUSED = .5
-P_RANDOM,  = 0.25
+P_RANDOM  = 0.25
 P_DEFECT = 0.25
 CELL_WIDTH = 33
 
@@ -644,7 +644,7 @@ class QLearnerAgent(AStarAgent):
         else:
             rew = ( len_path * (-1) ) + 25
 
-        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (rew + self.eps * (self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0)))
+        self.Q[q_prev] = self.Q.setdefault(q_prev, 0) + self.alpha * (rew + self.gamma * self.Q.setdefault(q_next, 0) - self.Q.setdefault(q_prev, 0))
 
     def print_map(self, world):
         print 'World shape: {}'.format(world.shape)
