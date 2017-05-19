@@ -1004,7 +1004,7 @@ class QLearnHighAgent(AStarAgent):
         m = 0
         len_path = 100
         if obs == None:
-            return QLearnHighAgent.ACTIONS.index('turn 1')
+            return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
 
         # Get current world state
         world = obs[0]
@@ -1054,9 +1054,9 @@ class QLearnHighAgent(AStarAgent):
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
-            return QLearnHighAgent.ACTIONS.index(action)
+            return QLearnHighAgent.ACTIONS.index(action), m, len_path
 
-        return QLearnHighAgent.ACTIONS.index('turn 1')
+        return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
 
     def neighbors(self, pos, state=None):
         state_width = state.shape[1]

@@ -43,7 +43,7 @@ sys.path.insert(1, os.path.join(os.path.pardir, os.getcwd()))
 
 BASELINES_FOLDER = 'results/baselines/pig_chase/%s/%s'
 EPOCH_SIZE = 100
-
+is_training = True
 
 def agent_factory(name, role, baseline_agent, clients, max_epochs,
                   logdir, visualizer):
@@ -111,13 +111,14 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                 visualize_training(visualizer, step, viz_rewards)
                 viz_rewards = []
                 obs = env.reset()
+                np.save('Q_files/QLow.npy', agent.Q)
 
             # select an action
             action = agent.act(obs, reward, agent_done, is_training=True)
             # take a step
             obs_prev = obs
             obs, reward, agent_done = env.do(action)
-            if(baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow'):
+            if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):
                 agent.updateQ(obs_prev, action, obs, reward)      
             viz_rewards.append(reward)
 
