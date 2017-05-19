@@ -111,7 +111,8 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                 visualize_training(visualizer, step, viz_rewards)
                 viz_rewards = []
                 obs = env.reset()
-                np.save('Q_files/QLow.npy', agent.Q)
+                if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):
+                    np.save('Q_files/Q123.npy', agent.Q)
 
             # select an action
             action = agent.act(obs, reward, agent_done, is_training=True)
