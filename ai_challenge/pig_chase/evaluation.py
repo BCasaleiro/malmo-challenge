@@ -138,10 +138,10 @@ def agent_loop(agent, env, metrics_acc):
             episode += 1
 
         # select an action
-        if agent.name == "Agent_1":
-            action = agent.act(obs, reward, agent_done, is_training=False)
-        else:
-            action, intention, len_path = agent.act(obs, reward, agent_done, is_training=True)
+        # if agent.name == "a":
+        #     action = agent.act(obs, reward, agent_done, is_training=False)
+        # else:
+        action = agent.act(obs, reward, agent_done, is_training=True)
         # take a step
         obs, reward, agent_done = env.do(action)
 

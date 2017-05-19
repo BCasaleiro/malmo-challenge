@@ -19,18 +19,23 @@ from common import ENV_AGENT_NAMES
 from evaluation import PigChaseEvaluator
 from environment import PigChaseTopDownStateBuilder, PigChaseSymbolicStateBuilder
 from malmopy.agent import RandomAgent
-from agent import FocusedAgent, QLearnerAgent
+from agent import FocusedAgent, QLearnHighAgent, QLearnLowAgent
 from common import ENV_AGENT_NAMES, ENV_TARGET_NAMES
-
+import numpy as np
 
 if __name__ == '__main__':
     # Warn for Agent name !!!
 
-    clients = [('127.0.0.1', 10000), ('127.0.0.1', 10001)]
-    agent_100k = FocusedAgent(ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0])
-    agent_500k = QLearnerAgent(ENV_AGENT_NAMES[1], ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
+	clients = [('127.0.0.1', 10000), ('127.0.0.1', 10001)]
+	agent_100k = QLearnHighAgent(ENV_AGENT_NAMES[0], ENV_AGENT_NAMES[1], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
+	agent_500k = QLearnHighAgent(ENV_AGENT_NAMES[1], ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
 
-    eval = PigChaseEvaluator(clients, agent_100k, agent_500k, PigChaseSymbolicStateBuilder())
-    eval.run()
+	agent_100k.Q = np.load('Q_files/Q110k.npy').item()
+	print "Size 100k: ", len(agent_100k.Q.keys())
+	agent_500k.Q = np.load('Q_files/Q270k.npy').item()
+	print "Size 500k: ", len(agent_500k.Q.keys())
 
-    eval.save('My Exp 1', 'results/pig_chase_results.json')
+	eval = PigChaseEvaluator(clients, agent_100k, agent_500k, PigChaseSymbolicStateBuilder())
+	eval.run()
+
+	eval.save('My Exp 1', 'results/pig_chase_results.json')
