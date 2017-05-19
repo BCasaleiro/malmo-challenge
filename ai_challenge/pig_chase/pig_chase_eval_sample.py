@@ -19,7 +19,7 @@ from common import ENV_AGENT_NAMES
 from evaluation import PigChaseEvaluator
 from environment import PigChaseTopDownStateBuilder, PigChaseSymbolicStateBuilder
 from malmopy.agent import RandomAgent
-from agent import FocusedAgent, QLearnHighAgent, QLearnLowAgent
+from agent import FocusedAgent, QLearnHighAgent, QLearnLowAgent, RunAwayAgent
 from common import ENV_AGENT_NAMES, ENV_TARGET_NAMES
 import numpy as np
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
 	clients = [('127.0.0.1', 10000), ('127.0.0.1', 10001)]
 	agent_100k = QLearnHighAgent(ENV_AGENT_NAMES[0], ENV_AGENT_NAMES[1], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
 	agent_500k = QLearnHighAgent(ENV_AGENT_NAMES[1], ENV_AGENT_NAMES[0], ENV_TARGET_NAMES[0], 0.3, 0.9, 0.05)
-
+	
 	agent_100k.Q = np.load('Q_files/Q110k.npy').item()
 	print "Size 100k: ", len(agent_100k.Q.keys())
 	agent_500k.Q = np.load('Q_files/Q270k.npy').item()
