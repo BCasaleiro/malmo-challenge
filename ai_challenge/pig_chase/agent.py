@@ -686,7 +686,7 @@ class QLearnLowAgent(AStarAgent):
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
         self.Q = dict()
-        self.Q = np.load('Q.npy').item()
+        #self.Q = np.load('Q.npy').item()
         self.alpha = alpha
         self.gamma = gamma
         self.eps = eps
@@ -734,8 +734,12 @@ class QLearnLowAgent(AStarAgent):
                 dir_enemy = self.yaw_to_direction(int(entitie[u'yaw']))
 
         # Get my position
-        self.me['position'] = \
-            [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+        temp_me = [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k]
+        if len(temp_me) > 0:
+            self.me['position'] = \
+                [(j, i, dir_me) for i, v in enumerate(world) for j, k in enumerate(v) if self.me['name'] in k][0]
+        else:
+            self.me['position'] = tuple ((-1, -1, 1))
 
         temp_enemy = [(j, i, dir_enemy) for i, v in enumerate(world) for j, k in enumerate(v) if self.enemy['name'] in k]
         # Get enemy position
@@ -743,10 +747,15 @@ class QLearnLowAgent(AStarAgent):
             self.enemy['position'] = temp_enemy[0]
         else:
             self.enemy['position'] = tuple((-1, -1, 1))
-        # Get pig position
-        self.pig['position'] = \
-            [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
 
+        # Get pig position
+        temp_pig = [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k]
+        if len(temp_pig) > 0:
+            self.pig['position'] = \
+                [(j, i, 0) for i, v in enumerate(world) for j, k in enumerate(v) if self.pig['name'] in k][0]
+        else:
+            self.pig['position'] = tuple((-1, -1, 1))
+        
         self.agent_def = QLearnLowAgent.Neighbour(1, self.me['position'][0], self.me['position'][1], self.me['position'][2], "")
 
         return tuple((self.me['position'], self.enemy['position'], self.pig['position']))
@@ -764,7 +773,7 @@ class QLearnLowAgent(AStarAgent):
             actions.append(QLearnLowAgent.ACTIONS.index(nb.action))
 
         if random.random() < self.eps:
-        	return random.choice(actions)
+        	return QLearnLowAgent.ACTIONS.index(random.choice(actions))
 
         maximum = -25
         max_action = 0
@@ -778,7 +787,7 @@ class QLearnLowAgent(AStarAgent):
 
 
         if(maximum == -25):
-			return random.choice(actions)
+			return QLearnLowAgent.ACTIONS.index(random.choice(actions))
 
         #print "Max action:", max_action
         return max_action
@@ -849,7 +858,8 @@ class QLearnHighAgent(AStarAgent):
         self.right_hole = QLearnHighAgent.Neighbour(1, 7, 4, 0, "")
         self.left_hole = QLearnHighAgent.Neighbour(1, 1, 4, 0, "")
 
-        self.Q = np.load('Q.npy').item()
+        self.Q = dict()
+        #np.load('Q.npy').item()
 
         self.alpha = float(alpha)
         self.gamma = float(gamma)
@@ -994,7 +1004,7 @@ class QLearnHighAgent(AStarAgent):
         m = 0
         len_path = 100
         if obs == None:
-            return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
+            return QLearnHighAgent.ACTIONS.index('turn 1')
 
         # Get current world state
         world = obs[0]
@@ -1044,9 +1054,9 @@ class QLearnHighAgent(AStarAgent):
 
         if self._action_list is not None and len(self._action_list) > 0:
             action = self._action_list.pop(0)
-            return QLearnHighAgent.ACTIONS.index(action), m, len_path
+            return QLearnHighAgent.ACTIONS.index(action)
 
-        return QLearnHighAgent.ACTIONS.index('turn 1'), m, len_path
+        return QLearnHighAgent.ACTIONS.index('turn 1')
 
     def neighbors(self, pos, state=None):
         state_width = state.shape[1]
