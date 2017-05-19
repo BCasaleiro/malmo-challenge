@@ -532,7 +532,7 @@ class RunAwayAgent(AStarAgent):
            self._previous_pig_def = None
 
         if obs is None:
-            return random.choice(RunAwayAgent.ACTIONS)
+            return RunAwayAgent.ACTIONS.index(random.choice(RunAwayAgent.ACTIONS))
         # Get current world state
         world = obs[0]
         entities = obs[1]

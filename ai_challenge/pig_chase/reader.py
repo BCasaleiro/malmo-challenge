@@ -13,10 +13,10 @@ for line in lines:
 		step.append(line_split[1])
 		val.append(line_split[len(line_split)-1])
 
-h1 = [0 for i in range(50)]
-h2 = [0 for i in range(50)]
-h3 = [0 for i in range(50)]
-h4 = [0 for i in range(50)]
+h1 = [0 for i in range(51)]
+h2 = [0 for i in range(51)]
+h3 = [0 for i in range(51)]
+h4 = [0 for i in range(51)]
 
 for i, v in enumerate(val):
 	if(i<((len(val)/4))):
