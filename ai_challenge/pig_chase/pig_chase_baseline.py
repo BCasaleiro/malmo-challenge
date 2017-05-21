@@ -115,15 +115,31 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                     np.save('Q_files/Q123.npy', agent.Q)
 
             # select an action
-            action = agent.act(obs, reward, agent_done, is_training=True)
-            # take a step
-            obs_prev = obs
-            obs, reward, agent_done = env.do(action)
-            if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):
-                agent.updateQ(obs_prev, action, obs, reward)      
-            viz_rewards.append(reward)
+            if(baseline_agent == 'qlearnhigh'):
 
-            agent.inject_summaries(step)
+                 # select an action
+                action, intention, len_path = agent.act(obs, reward, agent_done, is_training=True)
+                aux_obs = obs
+            
+                # take a step
+                obs, reward, agent_done = env.do(action)
+                viz_rewards.append(reward)
+
+                agent.updateQ(aux_obs, action, obs, reward, intention, len_path)
+
+                agent.inject_summaries(step)
+
+            else:
+
+                action = agent.act(obs, reward, agent_done, is_training=True)
+                # take a step
+                obs_prev = obs
+                obs, reward, agent_done = env.do(action)
+                if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):
+                    agent.updateQ(obs_prev, action, obs, reward)      
+                viz_rewards.append(reward)
+
+                agent.inject_summaries(step)
 
 
 def run_experiment(agents_def):

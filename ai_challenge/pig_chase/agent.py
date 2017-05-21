@@ -773,7 +773,7 @@ class QLearnLowAgent(AStarAgent):
             actions.append(QLearnLowAgent.ACTIONS.index(nb.action))
 
         if random.random() < self.eps:
-        	return QLearnLowAgent.ACTIONS.index(random.choice(actions))
+        	return random.choice(actions)
 
         maximum = -25
         max_action = 0
@@ -787,7 +787,7 @@ class QLearnLowAgent(AStarAgent):
 
 
         if(maximum == -25):
-			return QLearnLowAgent.ACTIONS.index(random.choice(actions))
+			return random.choice(actions)
 
         #print "Max action:", max_action
         return max_action
