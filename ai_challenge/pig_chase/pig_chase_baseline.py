@@ -112,7 +112,7 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
                 viz_rewards = []
                 obs = env.reset()
                 if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):
-                    np.save('Q_files/Q123.npy', agent.Q)
+                    np.save('Q_files/Qlow.npy', agent.Q)
 
             # select an action
             if(baseline_agent == 'qlearnhigh'):
@@ -133,6 +133,8 @@ def agent_factory(name, role, baseline_agent, clients, max_epochs,
 
                 action = agent.act(obs, reward, agent_done, is_training=True)
                 # take a step
+		print "Action:", action
+		sleep(2)
                 obs_prev = obs
                 obs, reward, agent_done = env.do(action)
                 if((baseline_agent == 'qlearnhigh' or baseline_agent == 'qlearnlow') and is_training):

@@ -685,8 +685,8 @@ class QLearnLowAgent(AStarAgent):
         self.me = {'name': self.name}
         self.enemy = {'name': str(enemy)}
         self.pig = {'name': str(target)}
-        self.Q = dict()
-        #self.Q = np.load('Q.npy').item()
+        #self.Q = dict()
+        self.Q = np.load("Q_files/Qlow.npy").item()
         self.alpha = alpha
         self.gamma = gamma
         self.eps = eps
